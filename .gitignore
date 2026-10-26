@@ -1,0 +1,9 @@
+node_modules/
+.wrangler/
+.dev.vars
+.env
+.env.*
+!.env.example
+backend/wrangler.local.toml
+test-results/
+.DS_Store

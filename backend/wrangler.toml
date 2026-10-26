@@ -1,0 +1,21 @@
+name = "weather-layer-reminders"
+main = "worker.js"
+compatibility_date = "2026-07-30"
+workers_dev = true
+
+[triggers]
+crons = ["* * * * *"]
+
+[vars]
+ALLOWED_ORIGIN = "https://kierraclifford805-dev.github.io"
+FRONTEND_URL = "https://kierraclifford805-dev.github.io/weather-layer/"
+# Set to "true" for emergency shutdown (also blocks test sends).
+PAUSE_DELIVERY = "false"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "weather-layer-reminders"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+# VAPID_PRIVATE_KEY, VAPID_PUBLIC_KEY, VAPID_SUBJECT: wrangler secret put

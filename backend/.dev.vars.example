@@ -1,0 +1,7 @@
+# LOCAL TESTING ONLY. Copy to backend/.dev.vars (gitignored).
+VAPID_SUBJECT="mailto:replace-with-your-contact@example.com"
+VAPID_PUBLIC_KEY="replace-with-generated-public-key"
+VAPID_PRIVATE_KEY="replace-with-generated-private-key"
+# To use the local frontend, override these in backend/wrangler.local.toml:
+# ALLOWED_ORIGIN = "http://localhost:8765"
+# FRONTEND_URL = "http://localhost:8765/weather-layer/"

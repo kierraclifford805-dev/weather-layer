@@ -1,0 +1,229 @@
+.reminder-dialog {
+  width:min(560px,100%);
+  max-width:100%;
+  max-height:100dvh;
+  height:100dvh;
+  margin:0 0 0 auto;
+  border-radius:26px 0 0 26px;
+  border:0;
+  padding:0;
+  overflow:auto
+}
+.reminder-panel {
+  padding:30px
+}
+.reminder-panel .dialog-heading {
+  position:sticky;
+  top:0;
+  background:var(--surface);
+  z-index:3;
+  padding-block:12px;
+  margin-top:-12px
+}
+.reminder-panel .eyebrow {
+  font-size:.6rem
+}
+.reminder-intro {
+  color:var(--muted);
+  line-height:1.85;
+  margin:8px 0 16px;
+  font-size:.875rem
+}
+.availability-note {
+  font-size:.8125rem;
+  line-height:1.8;
+  padding:12px 14px;
+  border:1px dashed var(--line);
+  border-radius:12px;
+  color:var(--muted);
+  margin-top:14px
+}
+.reminder-grid {
+  display:grid;
+  gap:20px
+}
+.reminder-panel label {
+  font-size:.875rem;
+  display:block;
+  margin-bottom:var(--space-2)
+}
+.reminder-panel input:not([type=checkbox]),.reminder-panel select {
+  width:100%;
+  min-height:46px
+}
+.reminder-panel .check-label {
+  display:inline-flex;
+  align-items:center;
+  gap:var(--space-2);
+  margin:3px 15px 3px 0;
+  min-height:44px
+}
+.reminder-panel .check-label input {
+  margin:0
+}
+.reminder-panel fieldset {
+  border:0;
+  border-top:1px solid var(--line);
+  padding:18px 0 0;
+  margin:0;
+  min-width:0
+}
+.reminder-panel legend {
+  font-weight:600;
+  padding:0 10px 0 0;
+  font-size:.9375rem
+}
+.reminder-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:var(--space-2);
+  margin-top:18px
+}
+.reminder-actions>button {
+  flex:1 1 140px
+}
+.reminder-actions .primary-button {
+  flex-basis:100%
+}
+.reminder-actions .danger-button {
+  color:var(--danger);
+  font-weight:400;
+  background:transparent
+}
+.reminder-note {
+  font-size:.75rem;
+  line-height:1.8;
+  color:var(--muted);
+  margin:10px 0
+}
+.reminder-state {
+  padding:13px 16px;
+  background:var(--blue-soft);
+  border-radius:12px;
+  line-height:1.8;
+  font-size:.8125rem;
+  margin:16px 0;
+  overflow-wrap:anywhere
+}
+.reminder-preview {
+  border-top:1px solid var(--line);
+  margin-top:var(--space-5);
+  padding-top:20px
+}
+.reminder-preview h3 {
+  font-size:1.125rem;
+  margin:0 0 10px
+}
+.brief-module {
+  padding:18px;
+  background:var(--surface-soft);
+  margin-top:var(--space-3);
+  border-radius:14px;
+  line-height:1.85
+}
+.brief-module h4 {
+  margin:0 0 8px;
+  font-size:.9375rem
+}
+.brief-module p {
+  font-size:.875rem;
+  margin:5px 0
+}
+.reminder-panel a {
+  color:var(--blue);
+  text-underline-offset:3px
+}
+.reminder-panel details {
+  margin-top:14px;
+  font-size:.75rem;
+  line-height:1.85
+}
+.reminder-panel details p {
+  margin:12px 0
+}
+.reminder-city-results {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--space-2);
+  margin-top:var(--space-3);
+  max-height:230px;
+  overflow:auto;
+  padding:3px
+}
+.reminder-city-results button {
+  text-align:left;
+  min-height:44px;
+  font-weight:400;
+  font-size:.8125rem;
+  overflow-wrap:anywhere
+}
+.reminder-panel .search-row input {
+  width:0;
+  flex:1
+}
+.reminder-panel .search-row button {
+  flex-shrink:0
+}
+.reminder-history {
+  padding-left:20px;
+  font-size:.75rem;
+  line-height:1.9
+}
+.reminder-panel .fixed-city {
+  font-weight:550;
+  color:var(--blue)
+}
+.reminder-preview a,.brief-detail a {
+  color:var(--blue);
+  font-size:.8125rem
+}
+.brief-view .reminder-dialog {
+  display:none!important
+}
+@media(max-width:600px) {
+  .reminder-dialog {
+    width:100%;
+    height:auto;
+    max-height:92dvh;
+    margin:auto 0 0;
+    border-radius:24px 24px 0 0;
+    padding-bottom:env(safe-area-inset-bottom);
+    border-top:1px solid var(--line)
+  }
+  .reminder-dialog::before {
+    content:'';
+    display:block;
+    width:38px;
+    height:4px;
+    border-radius:6px;
+    background:var(--line);
+    margin:10px auto 0
+  }
+  .reminder-panel {
+    padding:18px 22px 26px
+  }
+  .reminder-panel .dialog-heading {
+    padding-top:12px
+  }
+  .reminder-panel h2 {
+    font-size:1.35rem
+  }
+  .reminder-panel .check-label {
+    min-height:44px
+  }
+  .reminder-panel .search-row {
+    flex-wrap:wrap
+  }
+  .reminder-panel input:not([type=checkbox]),.reminder-panel select {
+    font-size:1rem
+  }
+  .reminder-city-results {
+    gap:6px
+  }
+  .reminder-panel .secondary-button {
+    padding:10px 12px
+  }
+  .reminder-dialog .dialog-heading .eyebrow {
+    font-size:.55rem
+  }
+}
