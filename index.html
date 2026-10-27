@@ -7,15 +7,15 @@
   <meta name="description" content="根据当地气温、早晚体感与个人怕冷程度，给你一句实用的每日穿衣建议。">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
-  <link rel="stylesheet" href="./styles.css?v=20261025-fit4">
-  <link rel="stylesheet" href="./reminders.css?v=20261025-fit4">
-  <link rel="stylesheet" href="./closet.css?v=20261025-fit4">
-  <script src="./theme.js?v=20261025-fit4"></script>
+  <link rel="stylesheet" href="./styles.css?v=20261027-closet1">
+  <link rel="stylesheet" href="./reminders.css?v=20261027-closet1">
+  <link rel="stylesheet" href="./closet.css?v=20261027-closet1">
+  <script src="./theme.js?v=20261027-closet1"></script>
   <title>添一件 · 每日穿衣天气</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23244ddd'/%3E%3Cpath d='M32 15v34M15 32h34' stroke='%23ffda66' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E">
 
-  <script type="module" src="./app.js?v=20261025-fit4"></script>
-  <script type="module" src="./reminders.js?v=20261025-fit4"></script>
+  <script type="module" src="./app.js?v=20261027-closet1"></script>
+  <script type="module" src="./reminders.js?v=20261027-closet1"></script>
 </head>
 <body>
   <a class="skip" href="#main">跳到主要内容</a>
@@ -50,7 +50,6 @@
         <section class="wardrobe-panel surface" aria-labelledby="wardrobe-title">
           <div class="section-heading"><div><p class="eyebrow">YOUR EVERYDAY WARDROBE</p><h2 id="wardrobe-title">今日穿搭推荐</h2></div><span class="small-label" id="wardrobe-date"></span></div>
           <div class="closet-callout"><div><strong id="closet-summary">用自己的衣服，搭一身。</strong><p id="closet-explainer">导入照片、确认分类，按天气从你的衣橱挑选。</p></div><button type="button" class="closet-open" data-open-closet aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM12 4v16M9 11v2m6-2v2M7 20v2m10-2v2"/></svg><span id="closet-open-label">我的衣橱</span></button></div>
-          <div class="profile-entry"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M12 10h16a4 4 0 0 1 4 4v16H8V14a4 4 0 0 1 4-4Z"/><path d="M14 10V6h12v4M14 17h12M14 23h3m6 0h3M20 17v13"/></svg><div><strong>更懂你的穿衣档案</strong><p data-profile-summary>加入身高、体重，让衣物更合适</p></div><button class="quiet-button" data-open-profile type="button" aria-haspopup="dialog">去完善 <span aria-hidden="true">↗</span></button></div>
           <div class="outfit-periods" id="outfit-periods" role="group" aria-label="穿搭参考时段" aria-describedby="outfit-period-note">
             <button type="button" data-outfit-period="all" aria-pressed="true"><span>全天</span><small>07–21 时</small></button>
             <button type="button" data-outfit-period="morning" aria-pressed="false"><span>早间</span><small>07–09 时</small></button>
@@ -61,10 +60,11 @@
           <div class="outfit-subheading"><h3>穿在身上</h3><button type="button" id="closet-variation" class="quiet-button" hidden>换一套 ↻</button></div>
           <p class="section-intro" id="advice-description"></p>
           <div class="outfit-items" id="outfit-items"></div><p class="fit-coverage-note" id="outfit-fit-note"></p>
-          <div class="outfit-save-panel" id="outfit-save-panel" hidden><div class="outfit-save-actions"><button type="button" class="primary-button" id="outfit-save">就穿这套 · 记住</button><button type="button" class="quiet-button" id="outfit-revert" hidden>恢复自动推荐</button><button type="button" class="quiet-button" id="outfit-forget" hidden>取消记住</button></div><p id="outfit-save-status" role="status"></p><details class="outfit-save-privacy"><summary>本机保存说明</summary><p>按城市、当地日期和时段分别保存，只记衣物编号，不复制照片。最多保留最近 30 组，清除网站数据后会丢失；不云同步，不包含在衣橱备份和明日推送中。天气建议或衣橱变化后需要重新确认。</p></details></div>
+          <div class="outfit-save-panel" id="outfit-save-panel" hidden><div class="outfit-save-actions"><button type="button" class="primary-button" id="outfit-save">就穿这套 · 记住</button><button type="button" class="quiet-button" id="outfit-undo" hidden>撤销换搭</button><button type="button" class="quiet-button" id="outfit-revert" hidden>恢复自动推荐</button><button type="button" class="quiet-button" id="outfit-forget" hidden>取消记住</button></div><p id="outfit-save-status" role="status"></p><details class="outfit-save-privacy"><summary>本机保存说明</summary><p>切换日期或时段时，最近 12 组临时调整会留在当前页面，刷新后不保留。点击“记住”才写入本机，按城市、当地日期和时段分别保存衣物编号，不复制照片，最多保留最近 30 组。清除网站数据后会丢失；不云同步，不包含在衣橱备份和明日推送中。天气建议或衣橱变化后需要重新确认。</p></details></div>
           <p class="outfit-basis" id="outfit-basis" role="status"></p>
           <details class="outfit-explanation" id="outfit-explanation"><summary>这套怎么选的？</summary><p id="outfit-explanation-basis"></p><ul id="outfit-match-reasons"></ul><p class="small-label">照片用于展示单品，推荐依据你确认的衣物分类、厚薄与天气规则。</p></details>
           <div class="carry-heading"><h3>随身带着</h3><span class="small-label">全天预报参考</span></div><div class="carry-items" id="carry-items"></div>
+          <div class="profile-entry"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M12 10h16a4 4 0 0 1 4 4v16H8V14a4 4 0 0 1 4-4Z"/><path d="M14 10V6h12v4M14 17h12M14 23h3m6 0h3M20 17v13"/></svg><div><strong>更懂你的穿衣档案</strong><p data-profile-summary>加入身高、体重，让衣物更合适</p></div><button class="quiet-button" data-open-profile type="button" aria-haspopup="dialog">去完善 <span aria-hidden="true">↗</span></button></div>
           <div class="preference-row"><span>你的体感</span><div class="segmented" role="group" aria-label="怕冷程度"><button data-sensitivity="warm" aria-pressed="false">怕热</button><button data-sensitivity="normal" aria-pressed="true">刚刚好</button><button data-sensitivity="cold" aria-pressed="false">怕冷</button></div></div>
         </section>
         <section class="sun-panel surface" aria-labelledby="sun-title">
@@ -170,26 +170,24 @@
   </dialog>
   <dialog id="closet-dialog" class="closet-dialog" aria-labelledby="closet-title">
     <div class="dialog-heading"><div><p class="eyebrow">A WARDROBE THAT IS YOURS</p><h2 id="closet-title">我的衣橱</h2><p class="small-label" id="closet-count">保存在本机</p></div><button type="button" class="icon-button" data-close-dialog aria-label="关闭我的衣橱">×</button></div>
-    <details class="closet-privacy"><summary>照片仅存本机 · 保存与格式说明</summary><p>照片只保存在当前网站的浏览器，不上传服务器、不跨设备同步。更换设备、网站域名或清除浏览器数据后可能失去衣橱，请保留原照片或下载备份。衣橱搭配目前用于网页，明日提醒仍使用通用穿衣建议。</p><p>一次最多 12 张，每张不超过 12 MB。支持 JPG、PNG、WebP、AVIF；HEIC 请先转为 JPG。</p></details>
-    <p id="closet-message" class="closet-message" role="status" hidden></p>
-    <div class="closet-profile-link"><div><strong>穿衣档案</strong><p data-profile-summary></p></div><button type="button" class="quiet-button" data-open-profile aria-haspopup="dialog">编辑档案 ↗</button></div>
+    <div id="closet-feedback" class="closet-feedback" hidden><p id="closet-message" class="closet-message" role="status" hidden></p><button type="button" class="quiet-button" id="closet-undo-remove" hidden>撤销移除</button><button type="button" class="quiet-button" id="closet-continue-import" hidden>继续下一张</button></div>
     <div id="closet-library">
       <div class="closet-library-toolbar"><div class="segmented" role="group" aria-label="衣橱列表"><button id="closet-filter-active" type="button" aria-pressed="true">我的衣物</button><button id="closet-filter-removed" type="button" aria-pressed="false">最近移除 (0)</button></div><button class="primary-button" type="button" id="closet-add">＋ 添加衣物</button></div>
       <input type="file" id="closet-input" accept="image/jpeg,image/png,image/webp,image/avif" multiple hidden aria-label="选择衣物照片">
-      <p class="closet-format-note">每张照片放一件衣物，一次可选 12 张。</p>
-      <details class="closet-filter-panel" id="closet-filter-panel"><summary>查找与筛选</summary><div class="closet-filters" role="search" aria-label="查找衣物">
-        <div class="closet-search-field"><label for="closet-search">查找衣物</label><input id="closet-search" type="search" maxlength="80" placeholder="搜索名称，例如：开衫、蓝色"></div>
+      <div class="closet-search-bar" role="search" aria-label="查找衣物"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><label class="sr-only" for="closet-search">查找衣物</label><input id="closet-search" type="search" maxlength="80" placeholder="找一件衣服，或一种颜色…"><button class="quiet-button" id="closet-search-clear" type="button" aria-label="清空搜索" hidden>×</button></div>
+      <div id="closet-categories" class="closet-categories" role="group" aria-label="衣物分类"></div>
+      <details class="closet-filter-panel" id="closet-filter-panel"><summary>更多筛选 <span id="closet-filter-summary">厚薄 · 合身</span></summary><div class="closet-filters">
         <div><label for="closet-group">衣物分类</label><select id="closet-group"><option value="all">全部衣物</option><option value="tops">上衣</option><option value="outer">外套</option><option value="bottoms">下装</option><option value="carry">随身物品</option></select></div>
         <div><label for="closet-weight-filter">衣物厚薄</label><select id="closet-weight-filter"><option value="all">全部厚薄</option><option value="light">轻薄</option><option value="regular">常规</option><option value="warm">保暖</option></select></div>
-      </div></details>
-      <label class="closet-fit-filter"><input type="checkbox" id="closet-fit-only">隐藏已知不合适的衣物<span>未知尺码仍会保留</span></label>
+      </div><label class="closet-fit-filter"><input type="checkbox" id="closet-fit-only">隐藏已知不合适的衣物<span>未知尺码仍会保留</span></label></details>
       <div class="closet-result-heading"><p class="small-label" id="closet-result-count" role="status"></p><button class="quiet-button" id="closet-clear-filters" type="button" hidden>清除筛选</button></div>
       <div class="closet-grid" id="closet-grid"></div>
-      <p class="closet-format-note">最多保存 100 件。移除的衣物保留在「最近移除」中，可恢复；在那里永久删除后释放本机照片空间。</p>
+      <div class="closet-profile-link"><div><strong>穿衣档案</strong><p data-profile-summary></p></div><button type="button" class="quiet-button" data-open-profile aria-haspopup="dialog">编辑档案 ↗</button></div>
+      <details class="closet-privacy"><summary>照片仅存本机 · 保存与格式说明</summary><p>每张照片放一件衣物，一次最多 12 张、每张不超过 12 MB。支持 JPG、PNG、WebP、AVIF；HEIC 请先转为 JPG。最多保存 100 件；移除后可在「最近移除」恢复。</p><p>照片只保存在当前网站的浏览器，不上传服务器、不跨设备同步。更换设备、网站域名或清除浏览器数据后可能失去衣橱，请保留原照片或下载备份。衣橱搭配目前用于网页，明日提醒仍使用通用穿衣建议。</p></details>
       <details class="closet-backup"><summary>备份与迁移衣橱</summary><p>下载在用衣物的照片与分类，换浏览器或设备后可从文件恢复。文件只在本机处理，不上传服务器。</p><p class="closet-format-note">备份不包含「最近移除」。使用了搜索或分类时，只备份符合筛选的在用衣物。备份含照片，请自行保管；每份最多 64 MB。</p><p id="closet-backup-scope" class="small-label"></p><div class="closet-form-actions"><button type="button" class="secondary-button" id="closet-export">下载衣橱备份</button><button type="button" class="secondary-button" id="closet-import-backup">从备份恢复</button></div><input id="closet-backup-input" type="file" accept="application/json,.json" hidden aria-label="选择衣橱备份文件"></details>
     </div>
     <form id="closet-form" hidden>
-      <h3 id="closet-editor-title">把这件衣物放进衣橱</h3><p class="small-label" id="closet-import-progress"></p>
+      <h3 id="closet-editor-title">把这件衣物放进衣橱</h3><p class="small-label" id="closet-import-progress"></p><progress id="closet-import-meter" class="closet-import-meter" max="1" value="0" aria-label="本批照片处理进度" hidden></progress>
       <div class="closet-editor"><img id="closet-editor-photo" alt="待确认的衣物照片" width="280" height="300"><div class="closet-fields">
         <label for="closet-name">衣物名称</label><input id="closet-name" maxlength="40" placeholder="例如：米色针织开衫" required>
         <label for="closet-kind">衣物类型</label><select id="closet-kind" required></select>
@@ -200,7 +198,7 @@
         <div class="sizing-basic"><div><label for="closet-size-label">衣物尺码标签</label><input id="closet-size-label" maxlength="24" placeholder="例如 M、170/88A"></div><div><label for="closet-wear-fit">实际穿着感受</label><select id="closet-wear-fit"><option value="unknown">尚未确认</option><option value="regular">合身舒适</option><option value="relaxed">宽松舒适</option><option value="tight">偏紧／活动受限</option></select></div></div>
         <details class="sizing-ranges" id="closet-ranges-panel"><summary>补充适用身体范围</summary><p class="closet-format-note">从这件衣物的品牌尺码表或已确认试穿结果填写；填的是适用的<strong>身体范围</strong>，不是衣服平铺尺寸。不知道可留空，不会自动推算。</p><div id="closet-size-ranges"></div><p class="closet-format-note">更改衣物类型后，仅保存该类型对应的范围。适用范围只作参考，实际以试穿和品牌说明为准。</p></details>
       </details>
-      <div class="closet-form-actions"><button class="primary-button" id="closet-save" type="submit">保存到衣橱</button><button class="secondary-button" id="closet-cancel" type="button">取消未保存的导入</button></div>
+      <div class="closet-form-actions closet-editor-actions"><button class="primary-button" id="closet-save" type="submit">保存到衣橱</button><button class="quiet-button" id="closet-skip" type="button" hidden>跳过这张</button><button class="secondary-button" id="closet-cancel" type="button">返回衣橱</button></div>
     </form>
     <section id="closet-restore-panel" hidden aria-labelledby="closet-restore-title"><h3 id="closet-restore-title" tabindex="-1">确认恢复衣橱</h3><p class="closet-format-note" id="closet-restore-file"></p><p class="closet-restore-counts" id="closet-restore-counts"></p><p class="closet-format-note">已有衣物会保留。完全相同的衣物跳过；编号相同但内容不同的衣物作为新副本加入；最近移除中的相同衣物会重新启用。</p><ul id="closet-restore-items" class="closet-restore-items" role="list"></ul><div class="closet-form-actions"><button type="button" class="primary-button" id="closet-restore-confirm">确认恢复</button><button type="button" class="secondary-button" id="closet-restore-recheck">重新检查</button><button type="button" class="secondary-button" id="closet-restore-cancel">取消恢复</button></div></section>
   </dialog>

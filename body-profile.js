@@ -1,5 +1,5 @@
-import { openDialog } from './dialogs.js?v=20261025-fit4';
-import { BODY_FIELDS, PROFILE_KEY, normalizeProfile, readProfile, writeProfile } from './shared/fit.js?v=20261025-fit4';
+import { openDialog } from './dialogs.js?v=20261027-closet1';
+import { BODY_FIELDS, PROFILE_KEY, normalizeProfile, readProfile, writeProfile } from './shared/fit.js?v=20261027-closet1';
 const $=id=>document.getElementById(id);
 let profile=null,error='',undoRaw=null,formRevision=null;
 export const getBodyProfile=()=>({profile,error});

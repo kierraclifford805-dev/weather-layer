@@ -55,11 +55,12 @@ test('weather scenarios use weather code and live day/night, independently of vi
   assert.equal(weatherScene(0,true),'night');assert.equal(weatherScene(undefined,true),'unknown');
 });
 const flush=async()=>{for(let i=0;i<12;i++)await new Promise(r=>setImmediate(r));};
-async function page(t,{fetchWeather=()=>Response.json(fixture()),stored=true,closetDB,savedOutfits,bodyProfile,photoDecoder=()=>Promise.resolve()}={}){
+async function page(t,{fetchWeather=()=>Response.json(fixture()),stored=true,closetDB,savedOutfits,bodyProfile,photoDecoder=()=>Promise.resolve(),photoCanvas=false}={}){
   const code=(await build({entryPoints:[`${root}app.js`],bundle:true,write:false,format:'iife',define:{'import.meta.url':JSON.stringify('https://example.com/weather-layer/app.js')}})).outputFiles[0].text;
   const dom=new JSDOM(readFileSync(`${root}index.html`,'utf8'),{url:'https://example.com/weather-layer/',runScripts:'outside-only'});t.after(()=>dom.window.close());
   const w=dom.window;w.AbortController=AbortController;w.matchMedia=()=>({matches:false});
   if(closetDB){w.indexedDB=closetDB;w.Blob=Blob;w.URL.createObjectURL=URL.createObjectURL;w.URL.revokeObjectURL=URL.revokeObjectURL;Object.defineProperty(w,'crypto',{value:globalThis.crypto});w.Image=class{naturalWidth=1;naturalHeight=1;decode(){return photoDecoder();}};}
+  if(photoCanvas){w.HTMLCanvasElement.prototype.getContext=()=>({fillRect(){},drawImage(){}});w.HTMLCanvasElement.prototype.toBlob=done=>done(new Blob(['decoded test photo'],{type:'image/jpeg'}));}
   w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
   w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};
   if(stored)w.localStorage.setItem('weather-layer-v1',JSON.stringify({city:{name:'杭州',latitude:30.27,longitude:120.15},sensitivity:'normal'}));
@@ -447,4 +448,81 @@ test('another-tab profile changes cannot be overwritten by a stale open form',as
   const changed=fakeProfile({height:175,revision:'latest'});w.localStorage.setItem(PROFILE_KEY,changed);w.dispatchEvent(new w.StorageEvent('storage',{key:PROFILE_KEY}));
   submit(w,$('profile-form'));assert.equal(w.localStorage.getItem(PROFILE_KEY),changed);assert.match($('profile-message').textContent,/避免覆盖/);
   $('profile-reset').click();assert.equal($('profile-height').value,'175');
+});
+
+test('draft swaps survive date and period switches, with independent undo and no implicit storage',async t=>{
+  const {w,$}=await page(t,{closetDB:await closetFixture()}),automatic=$('outfit-items').textContent;
+  $('closet-variation').click();const allDraft=$('outfit-items').textContent;
+  assert.notEqual(allDraft,automatic);assert(!$('outfit-undo').hidden);
+  w.document.querySelector('[data-outfit-period=morning]').click();
+  const morning=$('outfit-items').textContent;$('closet-variation').click();const morningDraft=$('outfit-items').textContent;
+  w.document.querySelector('[data-day="1"]').click();w.document.querySelector('[data-day="0"]').click();
+  assert.equal($('outfit-items').textContent,allDraft);
+  $('outfit-undo').click();assert.equal($('outfit-items').textContent,automatic);assert($('outfit-undo').hidden);
+  w.document.querySelector('[data-outfit-period=morning]').click();assert.equal($('outfit-items').textContent,morningDraft);
+  $('outfit-undo').click();assert.equal($('outfit-items').textContent,morning);
+  assert.equal(w.localStorage.getItem(OUTFIT_STORAGE_KEY),null);
+});
+test('reselecting the current garment does not create a draft; undo returns to a saved outfit',async t=>{
+  const {w,$}=await page(t,{closetDB:await closetFixture()});$('outfit-save').click();
+  const saved=$('outfit-items').textContent;
+  $('outfit-items').querySelector('[data-pick-slot]').click();$('outfit-picker-items').querySelector('[aria-pressed=true]').click();
+  assert($('outfit-undo').hidden);assert($('outfit-revert').hidden);
+  $('closet-variation').click();$('outfit-undo').click();assert.equal($('outfit-items').textContent,saved);assert($('outfit-save').disabled);
+  $('closet-variation').click();$('outfit-save').click();assert($('outfit-undo').hidden);
+});
+test('returning to a draft after a rule change or removing its chosen item cannot restore invalid clothes',async t=>{
+  const {w,$}=await page(t,{closetDB:await closetFixture()});$('closet-variation').click();
+  w.document.querySelector('[data-sensitivity=cold]').click();assert($('outfit-undo').hidden);
+  w.document.querySelector('[data-sensitivity=normal]').click();$('closet-variation').click();
+  const chosen=$('outfit-items').querySelector('[data-pick-slot]').getAttribute('aria-label');
+  w.document.querySelector('.closet-open').click();await flush();
+  const chosenCard=[...$('closet-grid').querySelectorAll('article')].find(card=>chosen.includes(card.querySelector('h3').textContent));
+  chosenCard.querySelector('[data-remove-clothes]').click();await flush();
+  assert($('outfit-undo').hidden);assert.match($('outfit-save-status').textContent,/已变化/);
+  assert(!$('outfit-items').textContent.includes(chosenCard.querySelector('h3').textContent));
+});
+test('quick categories, visible search clear and empty-state recovery compose without resetting thickness',async t=>{
+  const {w,$}=await page(t,{closetDB:await closetFixture()});w.document.querySelector('.closet-open').click();await flush();
+  assert(!$('closet-filter-panel').open);assert(!$('closet-search').closest('details'));
+  $('closet-categories').querySelector('[data-closet-group=tops]').click();
+  assert.equal($('closet-group').value,'tops');assert.match($('closet-result-count').textContent,/2 \/ 4/);
+  $('closet-weight-filter').value='warm';$('closet-weight-filter').dispatchEvent(new w.Event('change'));
+  $('closet-search').value='不存在';$('closet-search').dispatchEvent(new w.Event('input'));
+  $('closet-search-clear').click();assert.equal($('closet-weight-filter').value,'warm');assert.equal($('closet-group').value,'tops');
+  $('closet-grid').querySelector('[data-empty-clear]').click();assert.match($('closet-result-count').textContent,/4 \/ 4/);
+  assert.equal($('closet-categories').querySelector('[aria-pressed=true]').dataset.closetGroup,'all');
+});
+test('photo edit returns to the same filtered library position; size action opens optional sizing directly',async t=>{
+  const {w,$}=await page(t,{closetDB:await closetFixture()});w.document.querySelector('.closet-open').click();await flush();
+  $('closet-categories').querySelector('[data-closet-group=outer]').click();$('closet-dialog').scrollTop=250;
+  $('closet-grid').querySelector('[data-edit-clothes=outer]').click();assert(!$('closet-sizing-panel').open);assert.equal($('closet-dialog').scrollTop,0);
+  $('closet-name').value='改过名字的外套';submit(w,$('closet-form'));await flush();
+  assert.equal($('closet-group').value,'outer');assert.equal($('closet-dialog').scrollTop,250);
+  assert.equal(w.document.activeElement.dataset.editClothes,'outer');
+  $('closet-grid').querySelector('[data-edit-sizing=outer]').click();assert($('closet-sizing-panel').open);
+});
+test('immediate removal undo restores the actual garment and owned recommendations',async t=>{
+  const {w,$}=await page(t,{closetDB:await closetFixture()});w.document.querySelector('.closet-open').click();await flush();
+  $('closet-grid').querySelector('[data-remove-clothes=outer]').click();await flush();assert(!$('closet-undo-remove').hidden);
+  assert.match($('closet-summary').textContent,/你的 2 件/);$('closet-undo-remove').click();await flush();
+  assert.match($('closet-summary').textContent,/你的 3 件/);assert($('closet-undo-remove').hidden);assert.match($('closet-count').textContent,/4 件/);
+});
+function stagePhotos(w,$,files){Object.defineProperty($('closet-input'),'files',{configurable:true,value:files});$('closet-input').dispatchEvent(new w.Event('change'));}
+const testPhoto=name=>Object.assign(new Blob(['test image'],{type:'image/png'}),{name});
+test('batch import exposes progress, skips a photo and saves remaining photos with explicit classification',async t=>{
+  const {w,$}=await page(t,{closetDB:await closetFixture(),photoCanvas:true});w.document.querySelector('.closet-open').click();await flush();
+  stagePhotos(w,$,[testPhoto('第一张.png'),testPhoto('第二张.png')]);await flush();
+  assert.match($('closet-import-progress').textContent,/第 1 \/ 2/);assert.equal($('closet-kind').value,'');
+  $('closet-skip').click();await flush();assert.match($('closet-import-progress').textContent,/第 2 \/ 2/);assert.equal($('closet-import-meter').value,1);
+  $('closet-kind').value='tshirt';$('closet-thickness').value='light';submit(w,$('closet-form'));await flush();
+  assert.match($('closet-message').textContent,/已保存 1 件，跳过 1 张/);assert.match($('closet-count').textContent,/5 件/);assert($('closet-form').hidden);
+});
+test('one unsupported photo does not discard the rest of an import; finish only cancels unsaved photos',async t=>{
+  const {w,$}=await page(t,{closetDB:await closetFixture(),photoCanvas:true});w.document.querySelector('.closet-open').click();await flush();
+  stagePhotos(w,$,[{name:'不支持.heic',type:'image/heic',size:100},testPhoto('好照片.png'),testPhoto('稍后添加.png')]);await flush();
+  assert.match($('closet-message').textContent,/HEIC/);assert(!$('closet-continue-import').hidden);
+  $('closet-continue-import').click();await flush();$('closet-kind').value='tshirt';$('closet-thickness').value='light';submit(w,$('closet-form'));await flush();
+  assert.match($('closet-count').textContent,/5 件/);assert.match($('closet-import-progress').textContent,/第 3 \/ 3/);
+  $('closet-cancel').click();assert.match($('closet-message').textContent,/已保存 1 件，跳过 1 张/);assert.match($('closet-count').textContent,/5 件/);
 });

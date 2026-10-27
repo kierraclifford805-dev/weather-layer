@@ -32,6 +32,24 @@
     const select=document.createElement('select');select.setAttribute('aria-label','开发预览场景');select.style.cssText='font:inherit;min-height:32px;padding:3px 6px;max-width:100%';
     for(const [value,label] of Object.entries(cases)){const option=document.createElement('option');option.value=value;option.textContent=label;option.selected=value===scenario;select.append(option);}
     select.addEventListener('change',()=>{location.search=new URLSearchParams({case:select.value,theme}).toString();});banner.append(text,select);
+    const sample=document.createElement('button');sample.textContent='载入示例衣橱（仅预览）';sample.style.cssText='font:inherit;min-height:32px;padding:3px 8px';
+    sample.addEventListener('click',async()=>{
+      sample.disabled=true;sample.textContent='正在准备本机示例…';
+      try{
+        const clothes=[['tshirt','雾蓝短袖','light'],['longsleeve','奶白薄长袖','light'],['light-jacket','轻薄通勤外套','light'],['trousers','日常轻薄长裤','light'],['hat','浅色遮阳帽','light'],['umbrella','折叠雨伞','regular'],['coat','秋冬保暖外套','warm']];
+        const records=[];
+        for(const [kind,name,thickness] of clothes){
+          const image=new Image();image.src=`./assets/clothes/${kind}.svg`;await image.decode();
+          const canvas=document.createElement('canvas');canvas.width=360;canvas.height=360;const ctx=canvas.getContext('2d');ctx.fillStyle='#f2f4f8';ctx.fillRect(0,0,360,360);ctx.drawImage(image,20,20,320,320);
+          const photo=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.9));
+          records.push({id:`dev-sample-${kind}`,name:`示例 · ${name}`,kind,thickness,photo,updatedAt:Date.now(),createdAt:Date.now(),removedAt:null,sizing:{label:'',fit:'regular',ranges:{}}});
+        }
+        await new Promise((resolve,reject)=>{
+          const request=indexedDB.open('weather-layer-closet-v1',1);request.onupgradeneeded=()=>request.result.createObjectStore('clothes',{keyPath:'id'});request.onerror=()=>reject(request.error);
+          request.onsuccess=()=>{const db=request.result,tx=db.transaction('clothes','readwrite');for(const item of records)tx.objectStore('clothes').put(item);tx.oncomplete=()=>{db.close();resolve();};tx.onabort=()=>{db.close();reject(tx.error);};};
+        });location.reload();
+      }catch{sample.disabled=false;sample.textContent='示例载入失败，点击重试';}
+    });banner.append(sample);
     if(scenario==='loading'){const button=document.createElement('button');button.textContent='完成模拟加载';button.addEventListener('click',()=>release());banner.append(button);}
     document.body.prepend(banner);
     if(largeText)document.documentElement.style.fontSize='32px';

@@ -1,4 +1,4 @@
-import { fitAssessment, validSizing } from './fit.js?v=20261025-fit4';
+import { fitAssessment, validSizing } from './fit.js?v=20261027-closet1';
 // User-confirmed categories. Weather decisions still come from shared/weather.js.
 export const CLOSET_KINDS = [
   {id:'tshirt',label:'短袖 / T 恤',thickness:'light'},

@@ -1,16 +1,24 @@
-import { getBodyProfile } from './body-profile.js?v=20261025-fit4';
-import { sizingSummary, fitAssessment } from './shared/fit.js?v=20261025-fit4';
+import { getBodyProfile } from './body-profile.js?v=20261027-closet1';
+import { sizingSummary, fitAssessment } from './shared/fit.js?v=20261027-closet1';
 import { finite, temp, escapeHTML as esc } from './shared/weather.js';
 import { outfitPeriods } from './shared/outfit-periods.js';
-import { clothes, wardrobe } from './visuals.js?v=20261025-fit4';
-import { getCloset, closetPhoto } from './closet.js?v=20261025-fit4';
-import { matchCloset, clothingMatchReason, closetKind, THICKNESS } from './shared/closet.js?v=20261025-fit4';
+import { clothes, wardrobe } from './visuals.js?v=20261027-closet1';
+import { getCloset, closetPhoto } from './closet.js?v=20261027-closet1';
+import { matchCloset, clothingMatchReason, closetKind, THICKNESS } from './shared/closet.js?v=20261027-closet1';
 
-import { openDialog } from './dialogs.js?v=20261025-fit4';
-import { OUTFIT_STORAGE_KEY, selectionKey, outfitSignature, chosenItems, sameChoices, validateSavedSelection, readSavedOutfits, saveOutfit, forgetOutfit } from './shared/outfit-selection.js?v=20261025-fit4';
+import { openDialog } from './dialogs.js?v=20261027-closet1';
+import { OUTFIT_STORAGE_KEY, selectionKey, outfitSignature, chosenItems, sameChoices, validateSavedSelection, readSavedOutfits, saveOutfit, forgetOutfit } from './shared/outfit-selection.js?v=20261027-closet1';
 
 const $ = id => document.getElementById(id);
 let context = null, selected = 'all', selection = null, current = null, pickerSlot = null, pickerScope = null;
+// Volatile drafts are scoped just like confirmations; photos/body values never enter them.
+const drafts=new Map();
+function changeChoices(choices){
+  if(sameChoices(choices,chosenItems(current.garments)))return;
+  selection.undo.push({choices:chosenItems(current.garments),dirty:selection.dirty});
+  if(selection.undo.length>10)selection.undo.shift();
+  selection.choices=choices;selection.dirty=true;
+}
 const garmentLabel = label => label.split(' / ').map(part=>`<span class="garment-name-part">${esc(part)}</span>`).join(' / ');
 const periodDescriptions = {
   '厚衣保暖':'保暖内搭配厚外套，长时间在户外时也照顾好脖颈和双手。',
@@ -42,13 +50,16 @@ function updateOutfit(message='') {
   const period=periods.find(item=>item.id===selected);
   document.querySelectorAll('[data-outfit-period]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.outfitPeriod===selected)));
   $('outfit-basis').textContent=period.available?`${date} · ${period.time} · 可用预报最低体感 ${temp(period.basis)}`:`${date} · 体感信息暂缺，暂不判断穿搭`;
-  $('outfit-period-note').textContent=selected==='all'?'全天沿用 07–21 时最低体感；点选时段，看看那时怎么穿。':`仅按${period.label}的可用预报选衣；全天温差与随身准备仍参考整天预报。`;
+  $('outfit-period-note').textContent=selected==='all'?'按 07–21 时最低体感选衣，也可切换出门时段。':`仅按${period.label}的可用预报选衣；全天温差与随身准备仍参考整天预报。`;
   $('advice-description').textContent=selected==='all'||!period.available?period.advice.description:periodDescriptions[period.advice.label];
   const closet=getCloset(),personal=closet.items.length>0,{profile,error:profileError}=getBodyProfile();
   const scope={cityKey:context.cityKey,date,period:selected},key=selectionKey(scope);
   const requirements=wardrobe({...report,advice:period.advice},sun),signature=outfitSignature(requirements,context.sensitivity,profile?.revision);
-  if(selection?.key===key&&selection.signature!==signature&&selection.dirty)message='天气或体感建议已变化，未保存的调整已重新匹配，请确认当前搭配。';
-  if(selection?.key!==key||selection.signature!==signature)selection={key,signature,choices:{},dirty:false};
+  const existing=drafts.get(key);
+  if(existing&&existing.signature!==signature&&existing.dirty)message='天气或体感建议已变化，未保存的调整已重新匹配，请确认当前搭配。';
+  selection=existing?.signature===signature?existing:{key,signature,choices:{},dirty:false,undo:[]};
+  drafts.delete(key);drafts.set(key,selection);
+  while(drafts.size>12)drafts.delete(drafts.keys().next().value);
   let saved=null,storageError='';
   try{saved=readSavedOutfits(localStorage).find(item=>selectionKey(item)===key)??null;}
   catch{storageError='暂时无法读取本机搭配记录，尚未保存。天气与衣橱仍可使用。';}
@@ -57,7 +68,7 @@ function updateOutfit(message='') {
   const garments=matchCloset(requirements,closet.items,{date,period:selected,choices:selection.choices,profile});
   if(selection.dirty&&!sameChoices(selection.choices,chosenItems(garments))){
     message='衣橱中的单品已变化，已按当前可用衣物重新匹配，请确认后再记住。';
-    selection.choices=chosenItems(garments);
+    selection.choices=chosenItems(garments);selection.undo=[];
   }
   current={scope,signature,garments,period,saved,validation,storageError};
   renderSelectionStatus(message);
@@ -73,7 +84,7 @@ function updateOutfit(message='') {
   $('closet-variation').hidden=!personal||!period.available;
   $('closet-variation').disabled=!garments.alternatives;
   $('closet-variation').title=garments.alternatives?'从合适的同类衣物里换一组':'再添加合适的同类衣物，就能换一套';
-  $('outfit-items').innerHTML=garments.wear.length?garments.wear.map((item,i)=>`<article class="outfit-item"><div class="garment-stage" data-garment="${item.asset}" data-owned="${!!item.owned}"><span class="garment-role"><small>${String(i+1).padStart(2,'0')}</small> ${item.role}</span><img src="${item.owned?closetPhoto(item.owned.id):clothes[item.asset]}" alt="${esc(item.owned?.name??`${item.label}插画`)}" width="200" height="190"></div><strong>${item.owned?esc(item.owned.name):garmentLabel(item.label)}</strong><span class="garment-reason">${item.owned?esc(item.label):item.reason}</span>${personal?`<small class="closet-source" data-owned="${!!item.owned}">${item.owned?'我的衣橱':'建议单品 · 衣橱暂缺'}</small>`:''}${item.owned?`<small class="fit-badge" data-fit="${item.fit.label==='尺码待确认'?'unknown':'eligible'}">${esc(item.fit.label)}</small>`:''}${pickButton(item,period.available)}</article>`).join(''):'<p class="empty-note">体感数据暂缺，暂不推荐衣物。可以更新天气，或稍后再试。</p>';
+  $('outfit-items').innerHTML=garments.wear.length?garments.wear.map((item,i)=>`<article class="outfit-item" data-personal="${!!item.owned}"><div class="garment-stage" data-garment="${item.asset}" data-owned="${!!item.owned}"><span class="garment-role"><small>${String(i+1).padStart(2,'0')}</small> ${item.role}</span><img src="${item.owned?closetPhoto(item.owned.id):clothes[item.asset]}" alt="${esc(item.owned?.name??`${item.label}插画`)}" width="200" height="190"></div><strong>${item.owned?esc(item.owned.name):garmentLabel(item.label)}</strong><span class="garment-reason">${item.owned?esc(item.label):item.reason}</span>${personal?`<small class="closet-source" data-owned="${!!item.owned}">${item.owned?'我的衣橱':'建议单品 · 衣橱暂缺'}</small>`:''}${item.owned?`<small class="fit-badge" data-fit="${item.fit.label==='尺码待确认'?'unknown':'eligible'}">${esc(item.fit.label)}</small>`:''}${pickButton(item,period.available)}</article>`).join(''):'<p class="empty-note">体感数据暂缺，暂不推荐衣物。可以更新天气，或稍后再试。</p>';
   const ownedWear=garments.wear.filter(item=>item.owned),compared=ownedWear.filter(item=>item.fit.matched.length).length;
   $('outfit-fit-note').textContent=profileError||(!period.available?'':profile?(compared?`已有 ${compared} 件对照你的身体范围；其余依据试穿标记或天气推荐。`:'档案已应用；当前单品暂无可对照的身体范围，可在衣橱编辑中补充。'):'补充穿衣档案与衣物尺码，推荐会更贴近你的实际穿着。');
   $('outfit-fit-note').hidden=!$('outfit-fit-note').textContent;
@@ -97,11 +108,10 @@ export function setupOutfit() {
   });
   $('closet-variation').addEventListener('click',()=>{
     if(!current||!current.garments.alternatives)return;
-    selection.choices=Object.fromEntries([...current.garments.wear,...current.garments.carry].map(item=>{
+    changeChoices(Object.fromEntries([...current.garments.wear,...current.garments.carry].map(item=>{
       const index=item.candidates.findIndex(candidate=>candidate.id===item.owned?.id);
       return [item.slot,item.candidates.length?item.candidates[(index+1)%item.candidates.length].id:null];
-    }));
-    selection.dirty=true;updateOutfit();
+    })));updateOutfit();
   });
   for(const id of ['outfit-items','carry-items'])$(id).addEventListener('click',event=>{
     const button=event.target.closest('[data-pick-slot]');if(!button||!current)return;
@@ -112,8 +122,8 @@ export function setupOutfit() {
     const button=event.target.closest('[data-pick-id]');if(!button||!current||!pickerSlot)return;
     const item=[...current.garments.wear,...current.garments.carry].find(item=>item.slot===pickerSlot);
     if(!item?.candidates.some(candidate=>candidate.id===button.dataset.pickId))return;
-    selection.choices={...chosenItems(current.garments),[pickerSlot]:button.dataset.pickId};
-    selection.dirty=true;$('outfit-picker').close();
+    changeChoices({...chosenItems(current.garments),[pickerSlot]:button.dataset.pickId});
+    $('outfit-picker').close();
   });
   $('outfit-picker').addEventListener('close',()=>{
     const slot=pickerSlot;pickerSlot=null;if(!context)return;
@@ -125,13 +135,20 @@ export function setupOutfit() {
     if(!current||$('outfit-save').disabled)return;
     try{
       saveOutfit(localStorage,{...current.scope,signature:current.signature,choices:chosenItems(current.garments),savedAt:Date.now()});
-      selection.dirty=false;updateOutfit();
+      selection.dirty=false;selection.undo=[];updateOutfit();
     }catch{updateOutfit('保存失败，这套还没有记住。请检查浏览器存储空间或权限后重试。');}
   });
-  $('outfit-revert').addEventListener('click',()=>{selection.dirty=false;selection.choices={};updateOutfit();});
+  $('outfit-undo').addEventListener('click',()=>{
+    if(!current||!selection.undo.length)return;
+    const previous=selection.undo.pop();selection.choices=previous.choices;selection.dirty=previous.dirty;
+    // A non-dirty snapshot normally reloads saved/automatic choices in updateOutfit.
+    updateOutfit('已撤销上一次换搭。');
+    if($('outfit-undo').hidden)$('closet-variation').focus({preventScroll:true});
+  });
+  $('outfit-revert').addEventListener('click',()=>{selection.dirty=false;selection.choices={};selection.undo=[];updateOutfit();});
   $('outfit-forget').addEventListener('click',()=>{
     if(!current?.saved)return;
-    try{forgetOutfit(localStorage,current.scope);selection.dirty=false;selection.choices={};updateOutfit('已取消记住；回到天气自动推荐，衣橱里的照片保持不变。');}
+    try{forgetOutfit(localStorage,current.scope);selection.dirty=false;selection.choices={};selection.undo=[];updateOutfit('已取消记住；回到天气自动推荐，衣橱里的照片保持不变。');}
     catch{updateOutfit('取消记住失败，原记录仍保留，请重试。');}
   });
   window.addEventListener('storage',event=>{if(context&&(event.key===OUTFIT_STORAGE_KEY||event.key===null))updateOutfit('另一页面更新了搭配记录，已重新核对本页。');});
@@ -161,8 +178,9 @@ function renderSelectionStatus(message) {
   $('outfit-save').textContent=matches?'✓ 已记住这套':saved?'更新记住的搭配':'就穿这套 · 记住';
   $('outfit-save').disabled=!!matches||!period.available||!closet.available||!ownCount||!!storageError;
   $('outfit-revert').hidden=!selection.dirty;
+  $('outfit-undo').hidden=!selection.undo.length||!period.available;
   $('outfit-revert').textContent=saved&&validation.ok?'回到记住的搭配':'恢复自动推荐';
   $('outfit-forget').hidden=!saved;
   $('outfit-save-status').dataset.attention=String(!!storageError||!!(saved&&!validation.ok)||message.includes('失败'));
-  $('outfit-save-status').textContent=storageError||message||(!period.available?'体感信息暂缺，暂不能确认这套搭配。':!closet.available?'正在读取本机衣橱，暂不能确认搭配。':saved&&!validation.ok?validation.reason:matches?`已为 ${context.cityName} · ${context.date} · ${period.label}记住这套，下次打开会重新核对天气和衣物。`:selection.dirty?'已调整，尚未记住。确认后点“记住”，刷新或切换时段后也能找回。':!ownCount?'当前没有匹配的自有衣物，先参考通用建议。':'挑好之后，记住这一身。换一件不会改变其他单品。');
+  $('outfit-save-status').textContent=storageError||message||(!period.available?'体感信息暂缺，暂不能确认这套搭配。':!closet.available?'正在读取本机衣橱，暂不能确认搭配。':saved&&!validation.ok?validation.reason:matches?`已为 ${context.cityName} · ${context.date} · ${period.label}记住这套，下次打开会重新核对天气和衣物。`:selection.dirty?'已调整，尚未记住。切换日期或时段再回来，临时选择仍在；刷新前请点“记住”。':!ownCount?'当前没有匹配的自有衣物，先参考通用建议。':'挑好之后，记住这一身。换一件不会改变其他单品。');
 }

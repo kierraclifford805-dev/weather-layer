@@ -1,18 +1,25 @@
-import { BODY_FIELDS, normalizeSizing, sizingSummary, fitAssessment, bodyFieldsForKind } from './shared/fit.js?v=20261025-fit4';
-import { getBodyProfile } from './body-profile.js?v=20261025-fit4';
-import { openDialog } from './dialogs.js?v=20261025-fit4';
+import { BODY_FIELDS, normalizeSizing, fitAssessment, bodyFieldsForKind } from './shared/fit.js?v=20261027-closet1';
+import { getBodyProfile } from './body-profile.js?v=20261027-closet1';
+import { openDialog } from './dialogs.js?v=20261027-closet1';
 import { escapeHTML as esc } from './shared/weather.js';
-import { CLOSET_KINDS, CLOSET_GROUPS, THICKNESS, closetKind, filterCloset } from './shared/closet.js?v=20261025-fit4';
-import { listCloset, saveCloset, setClosetRemoved, deleteClosetPermanently, previewClosetRestore, restoreCloset } from './closet-store.js?v=20261025-fit4';
-import { createClosetBackup, parseClosetBackup, MAX_BACKUP_BYTES } from './shared/closet-backup.js?v=20261025-fit4';
+import { CLOSET_KINDS, CLOSET_GROUPS, THICKNESS, closetKind, filterCloset } from './shared/closet.js?v=20261027-closet1';
+import { listCloset, saveCloset, setClosetRemoved, deleteClosetPermanently, previewClosetRestore, restoreCloset } from './closet-store.js?v=20261027-closet1';
+import { createClosetBackup, parseClosetBackup, MAX_BACKUP_BYTES } from './shared/closet-backup.js?v=20261027-closet1';
 
 const $=id=>document.getElementById(id);
 let records=[],photoURLs=new Map(),available=false,busy=false,queue=[],draft=null,showRemoved=false,importVersion=0;
 let restoreReview=null;
+let batch=null,libraryReturn=null,undoRemoved=null;
 export const getCloset=()=>({items:records.filter(item=>!item.removedAt),available});
 export const closetPhoto=id=>photoURLs.get(id);
 let channel=null;
-function message(text,error=false){$('closet-message').textContent=text;$('closet-message').hidden=!text;$('closet-message').dataset.error=String(error);}
+function message(text,error=false){$('closet-message').textContent=text;$('closet-message').hidden=!text;$('closet-message').dataset.error=String(error);$('closet-feedback').hidden=!text;}
+function returnToLibrary(){
+  const target=libraryReturn?.id?$('closet-grid').querySelector(`[data-edit-clothes="${libraryReturn.id}"]`):$('closet-add');
+  (target??$('closet-add')).focus({preventScroll:true});
+  $('closet-dialog').scrollTop=libraryReturn?.scrollTop??0;
+}
+function batchSummary(){return batch?`本批已保存 ${batch.saved} 件${batch.skipped?`，跳过 ${batch.skipped} 张`:''}。`:'';}
 function errorMessage(error){return error?.name==='QuotaExceededError'?'浏览器存储空间不足，照片还没有保存。请释放空间后重试。':error?.message||'衣橱操作没有完成，请重试。';}
 const filters=()=>({query:$('closet-search').value,group:$('closet-group').value,thickness:$('closet-weight-filter').value,hideUnfit:$('closet-fit-only').checked,profile:getBodyProfile().profile});
 function syncBackupActions(){
@@ -28,7 +35,8 @@ function syncBackupActions(){
 function setBusy(value){
   busy=value;$('closet-form').setAttribute('aria-busy',String(value));$('closet-restore-panel').setAttribute('aria-busy',String(value));
   $('closet-save').disabled=value;$('closet-add').disabled=value||!available;$('closet-cancel').disabled=value;
-  ['closet-search','closet-group','closet-weight-filter','closet-filter-active','closet-filter-removed','closet-clear-filters','closet-fit-only'].forEach(id=>{$(id).disabled=value;});
+  ['closet-search','closet-search-clear','closet-group','closet-weight-filter','closet-filter-active','closet-filter-removed','closet-clear-filters','closet-fit-only','closet-skip','closet-continue-import','closet-undo-remove'].forEach(id=>{$(id).disabled=value;});
+  $('closet-categories').querySelectorAll('button').forEach(button=>{button.disabled=value;});
   syncBackupActions();
 }
 function hasFilters(){const {query,group,thickness,hideUnfit}=filters();return !!query.trim()||group!=='all'||thickness!=='all'||hideUnfit;}
@@ -47,10 +55,22 @@ function renderLibrary(){
   $('closet-add').disabled=busy||!available;
   $('closet-filter-active').setAttribute('aria-pressed',String(!showRemoved));$('closet-filter-removed').setAttribute('aria-pressed',String(showRemoved));
   $('closet-filter-removed').textContent=`最近移除 (${removed.length})`;
+  const base={...filters(),query:'',group:'all',removed:showRemoved};
+  if(!$('closet-categories').children.length)$('closet-categories').innerHTML=Object.entries(CLOSET_GROUPS).map(([id,label])=>`<button type="button" data-closet-group="${id}" aria-pressed="false">${id==='all'?'全部':label}<span></span></button>`).join('');
+  $('closet-categories').querySelectorAll('button').forEach(button=>{
+    const group=button.dataset.closetGroup,count=filterCloset(records,{...base,group}).length;
+    button.setAttribute('aria-pressed',String(filters().group===group));button.querySelector('span').textContent=count;
+    button.setAttribute('aria-label',`${CLOSET_GROUPS[group]}，${count} 件（不含搜索词）`);button.disabled=busy;
+  });
+  $('closet-search-clear').hidden=!$('closet-search').value;
+  $('closet-filter-summary').textContent=[filters().thickness==='all'?'':THICKNESS[filters().thickness],filters().hideUnfit?'隐藏不合适':''].filter(Boolean).join(' · ')||'厚薄 · 合身';
   const visible=filterCloset(records,{...filters(),removed:showRemoved}).sort((a,b)=>b.updatedAt-a.updatedAt);
   $('closet-result-count').textContent=`显示 ${visible.length} / ${showRemoved?removed.length:active.length} 件${showRemoved?'已移除衣物':'在用衣物'}`;
   $('closet-clear-filters').hidden=!hasFilters();syncBackupActions();
-  $('closet-grid').innerHTML=visible.length?visible.map(item=>`<article class="closet-item"><img src="${closetPhoto(item.id)}" alt="${esc(item.name)}" width="240" height="260" loading="lazy"><div><h3>${esc(item.name)}</h3><p>${closetKind(item.kind).label} · ${THICKNESS[item.thickness]}</p><p class="closet-sizing-label">${esc(sizingSummary(item)||'尺码待补充')}</p>${bodyFieldsForKind(item.kind).length?`<small class="fit-badge" data-fit="${fitAssessment(item,getBodyProfile().profile).eligible?(fitAssessment(item,getBodyProfile().profile).label==='尺码待确认'?'unknown':'eligible'):'review'}">${esc(fitAssessment(item,getBodyProfile().profile).label)}</small>`:''}<div class="closet-item-actions">${showRemoved?`<button type="button" data-restore-clothes="${item.id}" aria-label="恢复 ${esc(item.name)}">恢复</button><button type="button" data-delete-clothes="${item.id}" aria-label="永久删除 ${esc(item.name)}">永久删除</button>`:`<button type="button" data-edit-clothes="${item.id}" aria-label="编辑 ${esc(item.name)}">尺码／编辑</button><button type="button" data-remove-clothes="${item.id}" aria-label="移除 ${esc(item.name)}">移除</button>`}</div></div></article>`).join(''):`<div class="closet-empty"><img src="./assets/clothes/light-jacket.svg" alt="" width="100" height="95"><h3>${hasFilters()?'没有符合筛选的衣物':showRemoved?'这里没有已移除的衣物':'先从常穿的几件开始'}</h3><p>${hasFilters()?'试试其他名称或分类，也可以清除筛选查看全部。':showRemoved?'移除的衣物会留在这里，可以恢复。':'拍一张或选一张照片，确认类型和厚薄。再回到天气页，让它们组成今天的搭配。'}</p></div>`;
+  $('closet-grid').innerHTML=visible.length?visible.map(item=>{
+    const fit=fitAssessment(item,getBodyProfile().profile),sizing=item.sizing?.label?`尺码 ${item.sizing.label}`:'',photo=`<img src="${closetPhoto(item.id)}" alt="${esc(item.name)}" width="240" height="260" loading="lazy">`;
+    return `<article class="closet-item">${showRemoved?`<div class="closet-photo">${photo}</div>`:`<button type="button" class="closet-photo" data-edit-clothes="${item.id}" aria-label="编辑 ${esc(item.name)}">${photo}<span aria-hidden="true">↗</span></button>`}<div class="closet-item-copy"><h3>${esc(item.name)}</h3><p>${closetKind(item.kind).label} · ${THICKNESS[item.thickness]}</p>${sizing?`<p class="closet-sizing-label">${esc(sizing)}</p>`:''}${bodyFieldsForKind(item.kind).length?`<small class="fit-badge" data-fit="${fit.eligible?(fit.label==='尺码待确认'?'unknown':'eligible'):'review'}">${esc(fit.label)}</small>`:''}<div class="closet-item-actions">${showRemoved?`<button type="button" data-restore-clothes="${item.id}" aria-label="恢复 ${esc(item.name)}">恢复</button><button type="button" data-delete-clothes="${item.id}" aria-label="永久删除 ${esc(item.name)}">永久删除</button>`:`<button type="button" data-edit-sizing="${item.id}" aria-label="编辑 ${esc(item.name)} 的尺码">尺码／编辑</button><button type="button" data-remove-clothes="${item.id}" aria-label="移除 ${esc(item.name)}">移除</button>`}</div></div></article>`;
+  }).join(''):`<div class="closet-empty"><img src="./assets/clothes/light-jacket.svg" alt="" width="100" height="95"><h3>${hasFilters()?'没有符合筛选的衣物':showRemoved?'这里没有已移除的衣物':'先从常穿的几件开始'}</h3><p>${hasFilters()?'试试其他名称或分类，也可以清除筛选查看全部。':showRemoved?'移除的衣物会留在这里，可以恢复。':'一件内搭、一件外套、一条裤子，先收好最常穿的这一身。'}</p>${hasFilters()?'<button class="secondary-button" type="button" data-empty-clear>查看全部衣物</button>':!showRemoved?'<button class="primary-button" type="button" data-empty-add>添加第一件 ↗</button>':''}</div>`;
 }
 export async function preparePhoto(file){
   if(!['image/jpeg','image/png','image/webp','image/avif'].includes(file.type))throw new Error('请选择 JPG、PNG、WebP 或 AVIF 照片；HEIC 请先转为 JPG。');
@@ -103,23 +123,30 @@ function edit(item,isNew=false){
   clearDraft();draft={...item,isNew,preview:URL.createObjectURL(item.photo)};
   $('closet-editor-photo').src=draft.preview;
   $('closet-editor-title').textContent=isNew?'把这件衣物放进衣橱':'编辑这件衣物';
-  $('closet-import-progress').textContent=isNew?`待确认 ${queue.length+1} 件 · 每张照片单独标注`:'修改后，穿搭推荐会同步更新';
+  $('closet-import-progress').textContent=isNew?`第 ${batch.total-queue.length} / ${batch.total} 张 · ${batchSummary()}`:'修改后，穿搭推荐会同步更新';
+  $('closet-import-meter').hidden=!isNew;$('closet-import-meter').max=batch?.total??1;$('closet-import-meter').value=batch?batch.saved+batch.skipped:0;
+  $('closet-skip').hidden=!isNew;$('closet-cancel').textContent=isNew?'结束添加':'返回衣橱';
   $('closet-name').value=item.name;$('closet-kind').value=item.kind??'';$('closet-thickness').value=item.thickness??'regular';
   const sizing=normalizeSizing(item.sizing);$('closet-size-label').value=sizing.label;$('closet-wear-fit').value=sizing.fit;
   for(const key of Object.keys(BODY_FIELDS))for(const bound of ['min','max'])$(`closet-range-${key}-${bound}`).value=sizing.ranges[key]?.[bound]??'';
   $('closet-sizing-panel').open=false;$('closet-ranges-panel').open=false;syncSizingFields();
   $('closet-save').textContent=isNew&&queue.length?'保存并继续':'保存到衣橱';
-  $('closet-library').hidden=true;$('closet-form').hidden=false;$('closet-editor-title').tabIndex=-1;$('closet-editor-title').focus({preventScroll:true});
+  $('closet-library').hidden=true;$('closet-form').hidden=false;$('closet-dialog').scrollTop=0;$('closet-editor-title').tabIndex=-1;$('closet-editor-title').focus({preventScroll:true});
 }
 async function nextPhoto(){
-  if(!queue.length){clearDraft();$('closet-add').focus();return;}
+  $('closet-continue-import').hidden=true;
+  if(!queue.length){clearDraft();message(`${batchSummary()}回到天气页，就能查看更新后的穿搭。`);batch=null;returnToLibrary();return;}
   const file=queue.shift(),version=importVersion;setBusy(true);message('正在本机整理照片…');
   try{
     const photo=await preparePhoto(file);
     if(version!==importVersion||!$('closet-dialog').open)return;
     edit({id:crypto.randomUUID(),name:file.name.replace(/\.[^.]+$/,'').slice(0,40),photo},true);
     message('请确认衣物类型和厚薄，再保存。照片不会上传服务器。');
-  }catch(error){if(version===importVersion){message(`${file.name}：${errorMessage(error)}`,true);queue=[];}}
+  }catch(error){if(version===importVersion){
+    batch.skipped++;clearDraft();message(`${file.name}：${errorMessage(error)} ${batchSummary()}${queue.length?`还有 ${queue.length} 张未处理，可继续下一张。`:''}`,true);
+    $('closet-continue-import').hidden=!queue.length;
+    if(queue.length)$('closet-continue-import').focus();else{batch=null;returnToLibrary();}
+  }}
   finally{if(version===importVersion)setBusy(false);}
 }
 function syncSizingFields(){
@@ -143,32 +170,38 @@ export function setupCloset(){
   $('closet-kind').innerHTML='<option value="">请选择衣物类型</option>'+CLOSET_KINDS.map(kind=>`<option value="${kind.id}">${kind.label}</option>`).join('');
   $('closet-group').innerHTML=Object.entries(CLOSET_GROUPS).map(([id,label])=>`<option value="${id}">${label}</option>`).join('');
   document.querySelectorAll('[data-open-closet]').forEach(button=>button.addEventListener('click',()=>{
-    $('closet-filter-panel').open=window.matchMedia('(min-width:601px)').matches||hasFilters();
+    $('closet-filter-panel').open=filters().thickness!=='all'||filters().hideUnfit;
     openDialog($('closet-dialog'),$('closet-add'));refresh();
   }));
-  $('closet-dialog').addEventListener('close',()=>{importVersion++;queue=[];clearDraft();setBusy(false);message('');});
-  $('closet-add').addEventListener('click',()=>{if(!busy&&available)$('closet-input').click();});
+  $('closet-dialog').addEventListener('close',()=>{importVersion++;queue=[];batch=null;undoRemoved=null;$('closet-undo-remove').hidden=true;$('closet-continue-import').hidden=true;clearDraft();setBusy(false);message('');});
+  $('closet-add').addEventListener('click',()=>{if(!busy&&available){libraryReturn={scrollTop:$('closet-dialog').scrollTop};$('closet-input').click();}});
   $('closet-input').addEventListener('change',()=>{
     const files=[...$('closet-input').files];if(!files.length)return;
     if(files.length>12){message('一次最多导入 12 张照片，请分批添加。',true);$('closet-input').value='';return;}
-    importVersion++;queue=files;nextPhoto();
+    importVersion++;queue=files;batch={total:files.length,saved:0,skipped:0};undoRemoved=null;$('closet-undo-remove').hidden=true;nextPhoto();
   });
   $('closet-kind').addEventListener('change',()=>{const kind=closetKind($('closet-kind').value);if(kind)$('closet-thickness').value=kind.thickness;syncSizingFields();});
-  $('closet-cancel').addEventListener('click',()=>{importVersion++;queue=[];clearDraft();message('本次未保存的照片已取消；已保存的衣物仍在衣橱里。');$('closet-add').focus();});
+  $('closet-cancel').addEventListener('click',()=>{importVersion++;queue=[];clearDraft();message(batch?`${batchSummary()}其余未保存的照片已取消。`:'已返回衣橱，未保存的修改未应用。');batch=null;returnToLibrary();});
+  $('closet-skip').addEventListener('click',()=>{if(busy||!draft?.isNew)return;batch.skipped++;nextPhoto();});
+  $('closet-continue-import').addEventListener('click',()=>{if(!busy&&queue.length)nextPhoto();});
   $('closet-form').addEventListener('submit',async event=>{
     event.preventDefault();if(busy||!draft)return;const version=importVersion;setBusy(true);message('正在保存到本机…');
     try{
       const isNew=draft.isNew,savedItem=await saveCloset({...draft,name:$('closet-name').value.trim(),kind:$('closet-kind').value,thickness:$('closet-thickness').value,sizing:readSizing()});
       await refresh({throwOnError:true});channel?.postMessage('changed');if(version!==importVersion)return;
+      if(isNew)batch.saved++;
       clearDraft();if(isNew){showRemoved=false;clearFilters();renderLibrary();}
       message(!isNew&&!filterCloset([savedItem],filters()).length?'已保存；这件衣物不符合当前筛选，可清除筛选查看。':'已保存到本机，天气页的搭配已更新。');
       if(queue.length){setBusy(false);await nextPhoto();return;}
-      setBusy(false);$('closet-add').focus({preventScroll:true});
+      if(isNew){message(`${batchSummary()}天气页的搭配已更新。`);batch=null;}
+      setBusy(false);returnToLibrary();
     }catch(error){if(version===importVersion)message(errorMessage(error),true);}
     finally{if(version===importVersion)setBusy(false);}
   });
   $('closet-grid').addEventListener('click',async event=>{
     if(busy)return;
+    if(event.target.closest('[data-empty-add]')){$('closet-add').click();return;}
+    if(event.target.closest('[data-empty-clear]')){$('closet-clear-filters').click();return;}
     const deleteButton=event.target.closest('[data-delete-clothes]');
     if(deleteButton){
       const item=records.find(item=>item.id===deleteButton.dataset.deleteClothes);
@@ -178,16 +211,32 @@ export function setupCloset(){
       catch(error){message(errorMessage(error),true);}finally{setBusy(false);}
       return;
     }
-    const editButton=event.target.closest('[data-edit-clothes]');
-    if(editButton){const item=records.find(item=>item.id===editButton.dataset.editClothes);if(item){edit(item);if(bodyFieldsForKind(item.kind).length){$('closet-sizing-panel').open=true;$('closet-sizing-panel').querySelector('summary').focus();}}return;}
+    const editButton=event.target.closest('[data-edit-clothes],[data-edit-sizing]');
+    if(editButton){const item=records.find(item=>item.id===(editButton.dataset.editClothes??editButton.dataset.editSizing));if(item){
+      libraryReturn={id:item.id,scrollTop:$('closet-dialog').scrollTop};message('');undoRemoved=null;$('closet-undo-remove').hidden=true;edit(item);
+      if(editButton.dataset.editSizing&&bodyFieldsForKind(item.kind).length){$('closet-sizing-panel').open=true;$('closet-sizing-panel').querySelector('summary').focus();}
+    }return;}
     const button=event.target.closest('[data-remove-clothes],[data-restore-clothes]');if(!button)return;
     setBusy(true);
-    try{await setClosetRemoved(button.dataset.removeClothes??button.dataset.restoreClothes,!!button.dataset.removeClothes);await refresh({throwOnError:true});channel?.postMessage('changed');message(button.dataset.removeClothes?'已移到最近移除，可随时恢复。':'衣物已恢复，已重新加入搭配。');$('closet-filter-removed').focus();}
+    try{
+      const id=button.dataset.removeClothes??button.dataset.restoreClothes,item=records.find(item=>item.id===id),scrollTop=$('closet-dialog').scrollTop;
+      await setClosetRemoved(id,!!button.dataset.removeClothes);await refresh({throwOnError:true});channel?.postMessage('changed');
+      undoRemoved=button.dataset.removeClothes?id:null;$('closet-undo-remove').hidden=!undoRemoved;
+      message(button.dataset.removeClothes?`「${item.name}」已移到最近移除，可恢复。`:'衣物已恢复，已重新加入搭配。');
+      (undoRemoved?$('closet-undo-remove'):$('closet-filter-removed')).focus({preventScroll:true});$('closet-dialog').scrollTop=scrollTop;
+    }
     catch(error){message(errorMessage(error),true);}finally{setBusy(false);}
   });
+  $('closet-undo-remove').addEventListener('click',async()=>{
+    if(busy||!undoRemoved)return;const id=undoRemoved;setBusy(true);
+    try{await setClosetRemoved(id,false);await refresh({throwOnError:true});channel?.postMessage('changed');undoRemoved=null;$('closet-undo-remove').hidden=true;message('已撤销移除，衣物已回到衣橱。');($('closet-grid').querySelector(`[data-edit-clothes="${id}"]`)??$('closet-add')).focus({preventScroll:true});}
+    catch(error){message(errorMessage(error),true);}finally{setBusy(false);}
+  });
+  $('closet-categories').addEventListener('click',event=>{const button=event.target.closest('[data-closet-group]');if(!button||busy)return;$('closet-group').value=button.dataset.closetGroup;renderLibrary();});
   $('closet-filter-active').addEventListener('click',()=>{showRemoved=false;renderLibrary();});
   $('closet-filter-removed').addEventListener('click',()=>{showRemoved=true;renderLibrary();});
   $('closet-search').addEventListener('input',renderLibrary);
+  $('closet-search-clear').addEventListener('click',()=>{$('closet-search').value='';renderLibrary();$('closet-search').focus();});
   ['closet-group','closet-weight-filter'].forEach(id=>$(id).addEventListener('change',renderLibrary));
   $('closet-clear-filters').addEventListener('click',()=>{clearFilters();renderLibrary();$('closet-filter-panel').open=true;$('closet-search').focus();});
   $('closet-export').addEventListener('click',async()=>{
