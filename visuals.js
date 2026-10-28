@@ -12,7 +12,16 @@ export function weatherScene(code, night = false) {
   if ([0,1,2].includes(code)) return 'clear';
   return code === 3 ? 'cloudy' : 'unknown';
 }
-export const clothes = Object.fromEntries(['tshirt','longsleeve','knit','light-jacket','jacket','coat','puffer','base-layer','trousers','shorts','hat','umbrella','sunscreen','water'].map(id => [id, new URL(`clothes/${id}.svg`, assets).href]));
+export const clothes = Object.fromEntries(['tshirt','longsleeve','knit','light-jacket','jacket','coat','puffer','base-layer','trousers','shorts','hat','umbrella','sunscreen','water'].map(id => [id, new URL(`clothes/studio/${id}.svg`, assets).href]));
+export const wardrobeScene=new URL('editorial/wardrobe-scene.webp',assets).href;
+const categoryPaths={
+  all:'M12 8V6a2 2 0 1 1 2-2M12 8 3 15v3h18v-3L12 8Z',
+  tops:'m8 4-5 3-2 5 4 2 2-3v10h10V11l2 3 4-2-2-5-5-3q-4 4-8 0Z',
+  outer:'m8 3-4 3-3 14 4 1 2-10v11h10V11l2 10 4-1-3-14-4-3M8 3l4 5 4-5M12 8v14M8 13h2m4 0h2',
+  bottoms:'M6 3h12l2 19h-6l-2-13-2 13H4L6 3Zm0 4h12M10 3v3m4-3v3',
+  carry:'M5 8h14l2 13H3L5 8Zm3 0V6a4 4 0 0 1 8 0v2'
+};
+export const categoryIcon=id=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${categoryPaths[id]??categoryPaths.all}"/></svg>`;
 export const outfitHeadlines = {
   '出门，认真穿暖一点。':'认真穿暖一点。', '外套，选厚一点的。':'外套选厚一点。',
   '出门，多带一件外套。':'多带一件外套。', '带件薄外套，刚刚好。':'带件薄外套。',

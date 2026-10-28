@@ -2,7 +2,7 @@ import { API_BASE } from './reminder-config.js';
 import { CITIES, validCity, temp } from './shared/weather.js';
 import { addDays, localDate, validDate, validZone, nextReminder, displayRun } from './shared/dates.js';
 import { assembleBriefing, fetchBriefingData, WHO_SOURCE } from './shared/briefing.js?v=20261002-range1';
-import { openDialog } from './dialogs.js?v=20261027-closet1';
+import { openDialog } from './dialogs.js?v=20261028-studio1';
 
 const $ = id => document.getElementById(id);
 const TOKEN_KEY = 'weather-layer-reminder-token-v1', DRAFT_KEY = 'weather-layer-reminder-draft-v1';

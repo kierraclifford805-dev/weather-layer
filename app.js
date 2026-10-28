@@ -1,10 +1,10 @@
-import { setupBodyProfile } from './body-profile.js?v=20261027-closet1';
+import { setupBodyProfile } from './body-profile.js?v=20261028-studio1';
 import { CITIES, validCity, forecastURL } from './shared/weather.js';
 import { localDate, validZone } from './shared/dates.js';
-import { dayView, renderWeather, setupHourly } from './weather-view.js?v=20261027-closet1';
-import { openDialog } from './dialogs.js?v=20261027-closet1';
-import { setupOutfit } from './outfit-view.js?v=20261027-closet1';
-import { setupCloset } from './closet.js?v=20261027-closet1';
+import { dayView, renderWeather, setupHourly } from './weather-view.js?v=20261028-studio1';
+import { openDialog } from './dialogs.js?v=20261028-studio1';
+import { setupOutfit } from './outfit-view.js?v=20261028-studio1';
+import { setupCloset } from './closet.js?v=20261028-studio1';
 const $=id=>document.getElementById(id), storageKey='weather-layer-v1';
 let city=null,sensitivity='normal',weather=null,report=null,fetchedCity=null,fetchedAt=null,weatherDate=null;
 let requestId=0,searchId=0,controller=null,lastAttempt=0,selectedDay=0;

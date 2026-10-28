@@ -16,6 +16,12 @@
   --garment-cool:#eef2f9;
   --garment-warm:#f5f0e6;
   --garment-sage:#eef3ef;
+  --paper:#f7f5ef;
+  --paper-line:#e9e4d9;
+  --studio-blue:#e7eef6;
+  --studio-ink:#344965;
+  --studio-sage:#edf1ea;
+  --serif:"Songti SC","Noto Serif SC","STSong",serif;
   --line:#e6ebf2;
   --navy:#253a5c;
   --white:#fff;
@@ -56,6 +62,11 @@
   --garment-cool:#293a53;
   --garment-warm:#37392f;
   --garment-sage:#283c3b;
+  --paper:#25313f;
+  --paper-line:#3a4653;
+  --studio-blue:#2d4056;
+  --studio-ink:#d5e3f2;
+  --studio-sage:#2d3e39;
   --line:#324157;
   --navy:#b8cdf1;
   --danger:#f1aaa5;

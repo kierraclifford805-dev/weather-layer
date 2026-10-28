@@ -39,7 +39,7 @@
         const clothes=[['tshirt','雾蓝短袖','light'],['longsleeve','奶白薄长袖','light'],['light-jacket','轻薄通勤外套','light'],['trousers','日常轻薄长裤','light'],['hat','浅色遮阳帽','light'],['umbrella','折叠雨伞','regular'],['coat','秋冬保暖外套','warm']];
         const records=[];
         for(const [kind,name,thickness] of clothes){
-          const image=new Image();image.src=`./assets/clothes/${kind}.svg`;await image.decode();
+          const image=new Image();image.src=`./assets/clothes/studio/${kind}.svg`;await image.decode();
           const canvas=document.createElement('canvas');canvas.width=360;canvas.height=360;const ctx=canvas.getContext('2d');ctx.fillStyle='#f2f4f8';ctx.fillRect(0,0,360,360);ctx.drawImage(image,20,20,320,320);
           const photo=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.9));
           records.push({id:`dev-sample-${kind}`,name:`示例 · ${name}`,kind,thickness,photo,updatedAt:Date.now(),createdAt:Date.now(),removedAt:null,sizing:{label:'',fit:'regular',ranges:{}}});

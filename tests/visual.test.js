@@ -526,3 +526,25 @@ test('one unsupported photo does not discard the rest of an import; finish only 
   assert.match($('closet-count').textContent,/5 件/);assert.match($('closet-import-progress').textContent,/第 3 \/ 3/);
   $('closet-cancel').click();assert.match($('closet-message').textContent,/已保存 1 件，跳过 1 张/);assert.match($('closet-count').textContent,/5 件/);
 });
+
+test('wardrobe illustration remains explicitly decorative; real inventory controls the empty and collection views',async t=>{
+  const empty=await page(t,{closetDB:new IDBFactory()});
+  assert(empty.$('closet-discovery').hidden);assert(empty.$('closet-intro').hidden);
+  assert.match(empty.$('closet-grid').querySelector('.closet-empty-art img').alt,/插画，非我的衣物/);
+  assert.match(empty.$('closet-count').textContent,/0 件/);assert.equal(empty.$('closet-grid').querySelectorAll('article').length,0);
+  const {w,$}=await page(t,{closetDB:await closetFixture()});
+  assert(!$('closet-intro').hidden);assert(!$('closet-discovery').hidden);assert.match($('closet-inventory-note').textContent,/4 件/);
+  $('closet-search').value='不存在';$('closet-search').dispatchEvent(new w.Event('input'));
+  assert($('closet-intro').hidden);assert(!$('closet-discovery').hidden);assert.match($('closet-grid').textContent,/没有符合筛选/);
+  assert($('closet-categories').querySelectorAll('svg').length===5);
+});
+test('outfit match summary counts only weather and fit eligible owned wear; missing forecasts do not show completion',async t=>{
+  let missing=false;
+  const {w,$}=await page(t,{closetDB:await closetFixture(),fetchWeather:()=>{const data=fixture();if(missing)data.hourly.apparent_temperature=[];return Response.json(data);}});
+  assert(!$('outfit-coverage').hidden);assert.equal($('outfit-coverage').querySelector('strong').textContent,'3 / 3');
+  w.document.querySelector('.closet-open').click();await flush();$('closet-grid').querySelector('[data-remove-clothes=outer]').click();await flush();
+  assert.equal($('outfit-coverage').querySelector('strong').textContent,'2 / 3');
+  assert.equal($('outfit-coverage').querySelectorAll('[data-matched=true]').length,2);
+  assert.match($('outfit-coverage').querySelector('[data-matched=false]').textContent,/外层建议参考/);
+  missing=true;$('refresh').click();await flush();assert($('outfit-coverage').hidden);
+});

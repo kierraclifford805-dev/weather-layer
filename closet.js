@@ -1,10 +1,11 @@
-import { BODY_FIELDS, normalizeSizing, fitAssessment, bodyFieldsForKind } from './shared/fit.js?v=20261027-closet1';
-import { getBodyProfile } from './body-profile.js?v=20261027-closet1';
-import { openDialog } from './dialogs.js?v=20261027-closet1';
+import { BODY_FIELDS, normalizeSizing, fitAssessment, bodyFieldsForKind } from './shared/fit.js?v=20261028-studio1';
+import { getBodyProfile } from './body-profile.js?v=20261028-studio1';
+import { openDialog } from './dialogs.js?v=20261028-studio1';
 import { escapeHTML as esc } from './shared/weather.js';
-import { CLOSET_KINDS, CLOSET_GROUPS, THICKNESS, closetKind, filterCloset } from './shared/closet.js?v=20261027-closet1';
-import { listCloset, saveCloset, setClosetRemoved, deleteClosetPermanently, previewClosetRestore, restoreCloset } from './closet-store.js?v=20261027-closet1';
-import { createClosetBackup, parseClosetBackup, MAX_BACKUP_BYTES } from './shared/closet-backup.js?v=20261027-closet1';
+import { CLOSET_KINDS, CLOSET_GROUPS, THICKNESS, closetKind, filterCloset } from './shared/closet.js?v=20261028-studio1';
+import { listCloset, saveCloset, setClosetRemoved, deleteClosetPermanently, previewClosetRestore, restoreCloset } from './closet-store.js?v=20261028-studio1';
+import { createClosetBackup, parseClosetBackup, MAX_BACKUP_BYTES } from './shared/closet-backup.js?v=20261028-studio1';
+import { clothes, categoryIcon, wardrobeScene } from './visuals.js?v=20261028-studio1';
 
 const $=id=>document.getElementById(id);
 let records=[],photoURLs=new Map(),available=false,busy=false,queue=[],draft=null,showRemoved=false,importVersion=0;
@@ -55,8 +56,11 @@ function renderLibrary(){
   $('closet-add').disabled=busy||!available;
   $('closet-filter-active').setAttribute('aria-pressed',String(!showRemoved));$('closet-filter-removed').setAttribute('aria-pressed',String(showRemoved));
   $('closet-filter-removed').textContent=`最近移除 (${removed.length})`;
+  $('closet-intro').hidden=!active.length||showRemoved||hasFilters();
+  $('closet-discovery').hidden=!active.length&&!removed.length&&!hasFilters();
+  $('closet-inventory-note').textContent=`收好 ${active.length} 件日常，按天气慢慢搭。`;
   const base={...filters(),query:'',group:'all',removed:showRemoved};
-  if(!$('closet-categories').children.length)$('closet-categories').innerHTML=Object.entries(CLOSET_GROUPS).map(([id,label])=>`<button type="button" data-closet-group="${id}" aria-pressed="false">${id==='all'?'全部':label}<span></span></button>`).join('');
+  if(!$('closet-categories').children.length)$('closet-categories').innerHTML=Object.entries(CLOSET_GROUPS).map(([id,label])=>`<button type="button" data-closet-group="${id}" aria-pressed="false">${categoryIcon(id)}<b>${id==='all'?'全部':label}</b><span></span></button>`).join('');
   $('closet-categories').querySelectorAll('button').forEach(button=>{
     const group=button.dataset.closetGroup,count=filterCloset(records,{...base,group}).length;
     button.setAttribute('aria-pressed',String(filters().group===group));button.querySelector('span').textContent=count;
@@ -69,8 +73,8 @@ function renderLibrary(){
   $('closet-clear-filters').hidden=!hasFilters();syncBackupActions();
   $('closet-grid').innerHTML=visible.length?visible.map(item=>{
     const fit=fitAssessment(item,getBodyProfile().profile),sizing=item.sizing?.label?`尺码 ${item.sizing.label}`:'',photo=`<img src="${closetPhoto(item.id)}" alt="${esc(item.name)}" width="240" height="260" loading="lazy">`;
-    return `<article class="closet-item">${showRemoved?`<div class="closet-photo">${photo}</div>`:`<button type="button" class="closet-photo" data-edit-clothes="${item.id}" aria-label="编辑 ${esc(item.name)}">${photo}<span aria-hidden="true">↗</span></button>`}<div class="closet-item-copy"><h3>${esc(item.name)}</h3><p>${closetKind(item.kind).label} · ${THICKNESS[item.thickness]}</p>${sizing?`<p class="closet-sizing-label">${esc(sizing)}</p>`:''}${bodyFieldsForKind(item.kind).length?`<small class="fit-badge" data-fit="${fit.eligible?(fit.label==='尺码待确认'?'unknown':'eligible'):'review'}">${esc(fit.label)}</small>`:''}<div class="closet-item-actions">${showRemoved?`<button type="button" data-restore-clothes="${item.id}" aria-label="恢复 ${esc(item.name)}">恢复</button><button type="button" data-delete-clothes="${item.id}" aria-label="永久删除 ${esc(item.name)}">永久删除</button>`:`<button type="button" data-edit-sizing="${item.id}" aria-label="编辑 ${esc(item.name)} 的尺码">尺码／编辑</button><button type="button" data-remove-clothes="${item.id}" aria-label="移除 ${esc(item.name)}">移除</button>`}</div></div></article>`;
-  }).join(''):`<div class="closet-empty"><img src="./assets/clothes/light-jacket.svg" alt="" width="100" height="95"><h3>${hasFilters()?'没有符合筛选的衣物':showRemoved?'这里没有已移除的衣物':'先从常穿的几件开始'}</h3><p>${hasFilters()?'试试其他名称或分类，也可以清除筛选查看全部。':showRemoved?'移除的衣物会留在这里，可以恢复。':'一件内搭、一件外套、一条裤子，先收好最常穿的这一身。'}</p>${hasFilters()?'<button class="secondary-button" type="button" data-empty-clear>查看全部衣物</button>':!showRemoved?'<button class="primary-button" type="button" data-empty-add>添加第一件 ↗</button>':''}</div>`;
+    return `<article class="closet-item" data-kind="${item.kind}">${showRemoved?`<div class="closet-photo">${photo}</div>`:`<button type="button" class="closet-photo" data-edit-clothes="${item.id}" aria-label="编辑 ${esc(item.name)}">${photo}<span aria-hidden="true">↗</span></button>`}<div class="closet-item-copy"><h3>${esc(item.name)}</h3><p>${closetKind(item.kind).label} · ${THICKNESS[item.thickness]}</p>${sizing?`<p class="closet-sizing-label">${esc(sizing)}</p>`:''}${bodyFieldsForKind(item.kind).length?`<small class="fit-badge" data-fit="${fit.eligible?(fit.label==='尺码待确认'?'unknown':'eligible'):'review'}">${esc(fit.label)}</small>`:''}<div class="closet-item-actions">${showRemoved?`<button type="button" data-restore-clothes="${item.id}" aria-label="恢复 ${esc(item.name)}">恢复</button><button type="button" data-delete-clothes="${item.id}" aria-label="永久删除 ${esc(item.name)}">永久删除</button>`:`<button type="button" data-edit-sizing="${item.id}" aria-label="编辑 ${esc(item.name)}${bodyFieldsForKind(item.kind).length?' 的尺码':''}">${bodyFieldsForKind(item.kind).length?'尺码／编辑':'编辑'}</button><button type="button" data-remove-clothes="${item.id}" aria-label="移除 ${esc(item.name)}">移除</button>`}</div></div></article>`;
+  }).join(''):`<div class="closet-empty" data-first="${!hasFilters()&&!showRemoved}">${!hasFilters()&&!showRemoved?`<div class="closet-empty-art"><img src="${wardrobeScene}" alt="衣架与蓝色衬衫的场景插画，非我的衣物" width="1600" height="640"><div><p class="eyebrow">MAKE ROOM FOR EVERYDAY</p><strong>每一件，<br>都有新搭法。</strong></div><small class="scene-credit">衣橱场景插画</small></div>`:`<img src="${clothes['light-jacket']}" alt="" width="100" height="95">`}<div class="closet-empty-copy"><h3>${hasFilters()?'没有符合筛选的衣物':showRemoved?'这里没有已移除的衣物':'先从常穿的几件开始'}</h3><p>${hasFilters()?'试试其他名称或分类，也可以清除筛选查看全部。':showRemoved?'移除的衣物会留在这里，可以恢复。':'一件内搭、一件外套、一条裤子，先收好最常穿的这一身。'}</p>${!hasFilters()&&!showRemoved?`<div class="closet-starter" aria-label="添加衣物的步骤"><span><i>01</i>选照片</span><span><i>02</i>确认分类</span><span><i>03</i>按天气搭配</span></div>`:''}${hasFilters()?'<button class="secondary-button" type="button" data-empty-clear>查看全部衣物</button>':!showRemoved?'<button class="primary-button" type="button" data-empty-add>添加第一件 ↗</button>':''}</div></div>`;
 }
 export async function preparePhoto(file){
   if(!['image/jpeg','image/png','image/webp','image/avif'].includes(file.type))throw new Error('请选择 JPG、PNG、WebP 或 AVIF 照片；HEIC 请先转为 JPG。');

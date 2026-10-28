@@ -1,5 +1,5 @@
 // A saved outfit records garment IDs, never photos or a frozen weather forecast.
-import { closetCandidates, garmentSlot } from './closet.js?v=20261027-closet1';
+import { closetCandidates, garmentSlot } from './closet.js?v=20261028-studio1';
 import { validDate } from './dates.js';
 
 export const OUTFIT_STORAGE_KEY='weather-layer-outfits-v1';

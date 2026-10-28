@@ -1,5 +1,5 @@
-import { normalizeSizing } from './fit.js?v=20261027-closet1';
-import { validClosetMetadata, MAX_CLOSET_ITEMS } from './closet.js?v=20261027-closet1';
+import { normalizeSizing } from './fit.js?v=20261028-studio1';
+import { validClosetMetadata, MAX_CLOSET_ITEMS } from './closet.js?v=20261028-studio1';
 
 export const BACKUP_FORMAT='weather-layer-closet';
 export const MAX_BACKUP_BYTES=64*1024*1024;

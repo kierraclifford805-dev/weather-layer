@@ -1,6 +1,6 @@
-import { normalizeSizing } from './shared/fit.js?v=20261027-closet1';
-import { validClosetMetadata, MAX_CLOSET_ITEMS } from './shared/closet.js?v=20261027-closet1';
-import { closetSnapshot, planClosetRestore } from './shared/closet-backup.js?v=20261027-closet1';
+import { normalizeSizing } from './shared/fit.js?v=20261028-studio1';
+import { validClosetMetadata, MAX_CLOSET_ITEMS } from './shared/closet.js?v=20261028-studio1';
+import { closetSnapshot, planClosetRestore } from './shared/closet-backup.js?v=20261028-studio1';
 const DATABASE='weather-layer-closet-v1',STORE='clothes';
 async function database() {
   if(!globalThis.indexedDB)throw new Error('此浏览器无法使用本机衣橱存储，请在普通浏览模式重试。');
