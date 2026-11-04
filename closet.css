@@ -83,6 +83,16 @@
 /* A single selection uses the same photo vocabulary as the wardrobe library. */
 .garment-pick {display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;margin-top:6px;padding:6px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--blue);font-size:.8125rem;line-height:1.6}
 .garment-pick:hover {background:var(--blue-soft)}
+.garment-add {justify-content:flex-start;align-self:start;background:transparent;border-style:dashed;text-align:left}
+.garment-add span {flex:none}
+.outfit-import-status:not(:empty) {margin-top:12px;padding:10px 14px;border-radius:12px;background:var(--blue-soft);font-size:.875rem;line-height:1.7}
+.closet-quick-add {padding:clamp(16px,4vw,28px);border:1px solid var(--line);border-radius:16px;background:var(--paper,var(--surface))}
+.closet-quick-add h3 {margin:6px 0 8px;font-family:var(--serif,var(--font));font-size:clamp(1.25rem,4vw,1.75rem);font-weight:550}
+.closet-quick-add .closet-form-actions {margin-block:14px 8px}
+@media (max-width:600px) {
+  [data-quick-add] .closet-editor {gap:12px;margin-top:12px}
+  [data-quick-add] .closet-editor>img {width:112px;height:112px;padding:8px}
+}
 .carry-item .garment-pick {padding-inline:8px;margin-top:4px}
 .outfit-save-panel {margin-top:22px;padding:18px 0 0;border-top:1px solid var(--line)}
 .outfit-save-actions {display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}

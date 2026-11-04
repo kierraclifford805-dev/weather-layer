@@ -3,25 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#4263EB">
+  <meta name="theme-color" content="#f7f7f3">
   <meta name="description" content="根据当地气温、早晚体感与个人怕冷程度，给你一句实用的每日穿衣建议。">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="stylesheet" href="./styles.css?v=20261028-studio1">
   <link rel="stylesheet" href="./reminders.css?v=20261028-studio1">
-  <link rel="stylesheet" href="./closet.css?v=20261028-studio1">
-  <link rel="stylesheet" href="./editorial.css?v=20261028-studio1">
+  <link rel="stylesheet" href="./closet.css?v=20261104-quick-add">
+  <link rel="stylesheet" href="./editorial.css?v=20261104-quiet-edit">
   <script src="./theme.js?v=20261028-studio1"></script>
   <title>天气与衣橱助手 · 每日穿搭建议</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23244ddd'/%3E%3Cpath d='M32 15v34M15 32h34' stroke='%23ffda66' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E">
 
-  <script type="module" src="./app.js?v=20261028-studio1"></script>
+  <script type="module" src="./app.js?v=20261104-quiet-edit"></script>
   <script type="module" src="./reminders.js?v=20261028-studio1"></script>
 </head>
 <body>
   <a class="skip" href="#main">跳到主要内容</a>
   <header class="topbar">
-    <a class="brand" href="./" aria-label="天气与衣橱助手首页"><span class="brand-mark" aria-hidden="true">＋</span><span><strong>天气与衣橱助手</strong><small>把天气，穿在身上。</small></span></a>
+    <a class="brand" href="./" aria-label="天气与衣橱助手首页"><span class="brand-mark" aria-hidden="true">＋</span><span><strong>天气与衣橱助手</strong></span></a>
     <div class="header-actions">
       <button class="city-button" id="city-button" aria-haspopup="dialog"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span id="city-label">选择城市</span><span aria-hidden="true">⌄</span></button>
       <button class="icon-button reminder-shortcut" data-open-reminder aria-label="打开明日提醒设置" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 19h8m-4-17a6 6 0 0 0-6 6v5l-2 3h16l-2-3V8a6 6 0 0 0-6-6ZM10 22h4"/></svg></button>
@@ -42,46 +42,56 @@
     <div id="dashboard" hidden>
       <div class="today-layout">
         <section class="weather-window" id="weather-window" aria-labelledby="advice-title">
-          <div class="hero-copy"><p class="eyebrow" id="date-label"></p><span class="advice-badge" id="advice-badge"></span><h1 id="advice-title"></h1><p class="hero-reason" id="hero-reason"></p></div>
-          <img id="weather-scene" class="scene-picture" src="./assets/weather/unknown.svg" alt="" width="220" height="250">
-          <div class="weather-reading"><div class="temperature"><span id="current-temp">—</span><span class="degree">°</span></div><div class="weather-support"><strong id="weather-description"></strong><p id="reading-type"></p></div><div class="daily-range"><span>最低 / 最高</span><strong id="temp-range"></strong></div></div>
-          <aside id="temperature-alert" class="temperature-alert" aria-labelledby="temperature-alert-title" hidden><div class="temperature-alert-heading"><span class="temperature-alert-label">温差提醒</span><h3 id="temperature-alert-title"></h3></div><p id="temperature-alert-text"></p><p id="temperature-alert-detail" class="temperature-alert-detail" hidden></p></aside>
+          <div class="hero-copy"><div class="hero-meta"><p class="eyebrow" id="date-label"></p><span class="advice-badge" id="advice-badge"></span></div><h1 id="advice-title"></h1><p class="hero-reason" id="hero-reason"></p></div>
+          <div class="weather-observation">
+            <img id="weather-scene" class="scene-picture" src="./assets/weather/unknown.svg" alt="" width="220" height="250">
+            <div class="weather-reading"><div class="temperature"><span id="current-temp">—</span><span class="degree">°</span></div><div class="weather-support"><strong id="weather-description"></strong><p id="reading-type"></p></div><div class="daily-range"><span>最低 / 最高</span><strong id="temp-range"></strong></div></div>
+          </div>
+          <aside id="temperature-alert" class="temperature-alert" aria-labelledby="temperature-alert-title" hidden>
+            <div class="temperature-alert-heading"><h3 id="temperature-alert-title"></h3></div><p id="temperature-alert-text"></p>
+            <details id="temperature-alert-extra" hidden><summary>查看早晚体感</summary><p id="temperature-alert-detail" class="temperature-alert-detail"></p></details>
+          </aside>
           <div class="hero-foot"><p id="updated-at"></p><button id="refresh" class="quiet-button" hidden aria-label="更新天气"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M19 11a7 7 0 0 0-12-5M5 13a7 7 0 0 0 12 5"/></svg><span>更新</span></button></div>
         </section>
         <section class="wardrobe-panel surface" aria-labelledby="wardrobe-title">
-          <div class="section-heading wardrobe-masthead"><div><p class="eyebrow">THE DAILY EDIT <span aria-hidden="true">／</span> 穿搭手札</p><h2 id="wardrobe-title">今日穿搭推荐</h2></div><span class="small-label" id="wardrobe-date"></span></div>
-          <p class="wardrobe-deck">把天气的变化，穿成自己的日常。</p>
-          <div class="closet-callout"><div><strong id="closet-summary">用自己的衣服，搭一身。</strong><p id="closet-explainer">导入照片、确认分类，按天气从你的衣橱挑选。</p></div><button type="button" class="closet-open" data-open-closet aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM12 4v16M9 11v2m6-2v2M7 20v2m10-2v2"/></svg><span id="closet-open-label">我的衣橱</span></button></div>
+          <div class="section-heading wardrobe-masthead">
+            <div><p class="eyebrow wardrobe-meta">衣橱手记 <span aria-hidden="true">/</span> <span id="wardrobe-date"></span></p><h2 id="wardrobe-title">今日穿搭推荐</h2></div>
+            <button type="button" class="closet-open" data-open-closet aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM12 4v16M9 11v2m6-2v2M7 20v2m10-2v2"/></svg><span id="closet-open-label">我的衣橱</span></button>
+          </div>
           <div class="outfit-periods" id="outfit-periods" role="group" aria-label="穿搭参考时段" aria-describedby="outfit-period-note">
             <button type="button" data-outfit-period="all" aria-pressed="true"><span>全天</span><small>07–21 时</small></button>
             <button type="button" data-outfit-period="morning" aria-pressed="false"><span>早间</span><small>07–09 时</small></button>
             <button type="button" data-outfit-period="daytime" aria-pressed="false"><span>白天</span><small>11–16 时</small></button>
             <button type="button" data-outfit-period="evening" aria-pressed="false"><span>晚间</span><small>18–21 时</small></button>
           </div>
-          <p class="outfit-period-note" id="outfit-period-note"></p>
-          <div class="outfit-subheading"><h3><small aria-hidden="true">01</small> 穿在身上</h3><button type="button" id="closet-variation" class="quiet-button" hidden>换一套 ↻</button></div>
-          <p class="section-intro" id="advice-description"></p>
-          <div class="outfit-items" id="outfit-items"></div><div class="outfit-coverage" id="outfit-coverage" hidden role="status"></div><p class="fit-coverage-note" id="outfit-fit-note"></p>
+          <div class="outfit-subheading"><h3>穿在身上</h3><button type="button" id="closet-variation" class="quiet-button" hidden>换一套 ↻</button></div>
+          <div class="outfit-items" id="outfit-items"></div><p id="closet-summary" class="closet-summary">用自己的衣服，搭一身。</p><p class="outfit-import-status" id="outfit-import-status" role="status"></p>
           <div class="outfit-save-panel" id="outfit-save-panel" hidden><div class="outfit-save-actions"><button type="button" class="primary-button" id="outfit-save">就穿这套 · 记住</button><button type="button" class="quiet-button" id="outfit-undo" hidden>撤销换搭</button><button type="button" class="quiet-button" id="outfit-revert" hidden>恢复自动推荐</button><button type="button" class="quiet-button" id="outfit-forget" hidden>取消记住</button></div><p id="outfit-save-status" role="status"></p><details class="outfit-save-privacy"><summary>本机保存说明</summary><p>切换日期或时段时，最近 12 组临时调整会留在当前页面，刷新后不保留。点击“记住”才写入本机，按城市、当地日期和时段分别保存衣物编号，不复制照片，最多保留最近 30 组。清除网站数据后会丢失；不云同步，不包含在衣橱备份和明日推送中。天气建议或衣橱变化后需要重新确认。</p></details></div>
-          <p class="outfit-basis" id="outfit-basis" role="status"></p>
-          <details class="outfit-explanation" id="outfit-explanation"><summary>这套怎么选的？</summary><p id="outfit-explanation-basis"></p><ul id="outfit-match-reasons"></ul><p class="small-label">照片用于展示单品，推荐依据你确认的衣物分类、厚薄与天气规则。</p></details>
-          <div class="carry-heading"><h3><small aria-hidden="true">02</small> 随身带着</h3><span class="small-label">全天预报参考</span></div><div class="carry-items" id="carry-items"></div>
+          <details class="outfit-explanation" id="outfit-explanation">
+            <summary>这套怎么选的？</summary>
+            <p class="section-intro" id="advice-description"></p><p class="outfit-basis" id="outfit-basis"></p><p class="outfit-period-note" id="outfit-period-note"></p>
+            <p id="outfit-explanation-basis"></p><p id="closet-explainer"></p><div class="outfit-coverage" id="outfit-coverage" hidden></div>
+            <ul id="outfit-match-reasons"></ul><p class="fit-coverage-note" id="outfit-fit-note"></p><p class="small-label">照片用于展示单品，推荐依据你确认的衣物分类、厚薄与天气规则。</p>
+          </details>
+          <div class="carry-heading"><h3>随身带着</h3><span class="small-label">全天预报参考</span></div><div class="carry-items" id="carry-items"></div>
           <div class="profile-entry"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M12 10h16a4 4 0 0 1 4 4v16H8V14a4 4 0 0 1 4-4Z"/><path d="M14 10V6h12v4M14 17h12M14 23h3m6 0h3M20 17v13"/></svg><div><strong>更懂你的穿衣档案</strong><p data-profile-summary>加入身高、体重，让衣物更合适</p></div><button class="quiet-button" data-open-profile type="button" aria-haspopup="dialog">去完善 <span aria-hidden="true">↗</span></button></div>
           <div class="preference-row"><span>你的体感</span><div class="segmented" role="group" aria-label="怕冷程度"><button data-sensitivity="warm" aria-pressed="false">怕热</button><button data-sensitivity="normal" aria-pressed="true">刚刚好</button><button data-sensitivity="cold" aria-pressed="false">怕冷</button></div></div>
         </section>
+        <div class="weather-sidebar">
         <section class="sun-panel surface" aria-labelledby="sun-title">
-          <div class="section-heading"><div><p class="eyebrow">A LITTLE SUN CARE</p><h2 id="sun-title">阳光，也温柔应对</h2></div><svg class="sun-mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M1 12h2m18 0h2M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2"/></svg></div>
+          <div class="section-heading"><h2 id="sun-title">紫外线与防晒</h2><svg class="sun-mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M1 12h2m18 0h2M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2"/></svg></div>
           <p class="small-label" id="sun-date"></p><div class="uv-reading"><strong id="uv-value">—</strong><span id="uv-level">信息暂缺</span></div>
           <div id="uv-scale" class="uv-scale" role="img" aria-label="紫外线指数刻度，当前信息暂缺"><div class="uv-track"><i id="uv-marker" hidden></i></div><div class="uv-ticks"><span>0</span><span>3</span><span>8</span><span>11+</span></div></div>
           <p id="sun-advice" class="sun-advice"></p><p class="sun-footnote">每日最大值不代表此刻强度，也不能确定精确高峰时段。</p><a class="source-link" href="https://www.who.int/news-room/questions-and-answers/item/radiation-the-ultraviolet-(uv)-index" target="_blank" rel="noopener noreferrer">防护依据 · WHO 紫外线指引 ↗</a>
         </section>
         <section class="tonight-card" aria-labelledby="reminder-card-title">
-          <div class="tonight-top"><span class="eyebrow">TONIGHT, FOR TOMORROW</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15A9 9 0 0 1 9 3a9 9 0 1 0 11 12Z"/></svg></div><p class="tonight-label">明日提醒 · 今晚准备单</p><h2 id="reminder-card-title">把明天的准备，<br>留在今晚。</h2><p id="reminder-card-summary">设定你的时间，提前看看明天穿什么、如何防晒。</p><p id="reminder-card-state" class="tonight-state">正在检查提醒服务…</p><button class="tonight-button" data-open-reminder aria-haspopup="dialog">查看提醒设置 <span aria-hidden="true">↗</span></button>
+          <div class="tonight-top"><h2 id="reminder-card-title">明日出门提醒</h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15A9 9 0 0 1 9 3a9 9 0 1 0 11 12Z"/></svg></div><p id="reminder-card-summary">把明天的准备，留在今晚。</p><p id="reminder-card-state" class="tonight-state">正在检查提醒服务…</p><button class="tonight-button" data-open-reminder aria-haspopup="dialog">查看提醒设置 <span aria-hidden="true">↗</span></button>
         </section>
+        </div>
       </div>
       <div class="details-layout">
-        <section class="hourly-panel surface" aria-labelledby="hourly-title"><div class="section-heading"><div><p class="eyebrow">A DAY IN SMALL MOMENTS</p><h2 id="hourly-title">从早到晚，心里有数</h2></div><span class="small-label" id="hourly-date"></span></div><p class="section-intro">点选时刻，看看出门时的体感。</p><div id="hourly-chart"></div><p id="hour-detail" class="hour-detail" role="status"></p><p class="chart-caption" id="chart-caption"></p><ul class="daily-notes" id="tips"></ul></section>
-        <section class="forecast-panel surface" aria-labelledby="forecast-title"><div class="section-heading"><div><p class="eyebrow">THE WEEK AHEAD</p><h2 id="forecast-title">接下来 7 天</h2></div><span class="small-label">最低 / 最高 · °C</span></div><div class="forecast-list" id="forecast"></div><p class="chart-caption">所有温度区间使用同一刻度，长短可直接比较。</p></section>
+        <section class="hourly-panel surface" aria-labelledby="hourly-title"><div class="section-heading"><h2 id="hourly-title">逐小时体感</h2><span class="small-label" id="hourly-date"></span></div><p class="section-intro">点选时刻，看看出门时的体感。</p><div id="hourly-chart"></div><p id="hour-detail" class="hour-detail" role="status"></p><p class="chart-caption" id="chart-caption"></p><ul class="daily-notes" id="tips"></ul></section>
+        <section class="forecast-panel surface" aria-labelledby="forecast-title"><div class="section-heading"><h2 id="forecast-title">七天预报</h2><span class="small-label">最低 / 最高 · °C</span></div><div class="forecast-list" id="forecast"></div><p class="chart-caption">所有温度区间使用同一刻度，长短可直接比较。</p></section>
       </div>
       <p class="method-note" id="method-note"></p>
     </div>
@@ -173,10 +183,17 @@
   <dialog id="closet-dialog" class="closet-dialog" aria-labelledby="closet-title">
     <div class="dialog-heading"><div><p class="eyebrow">A WARDROBE THAT IS YOURS</p><h2 id="closet-title">我的衣橱</h2><p class="small-label" id="closet-count">保存在本机</p></div><button type="button" class="icon-button" data-close-dialog aria-label="关闭我的衣橱">×</button></div>
     <div id="closet-feedback" class="closet-feedback" hidden><p id="closet-message" class="closet-message" role="status" hidden></p><button type="button" class="quiet-button" id="closet-undo-remove" hidden>撤销移除</button><button type="button" class="quiet-button" id="closet-continue-import" hidden>继续下一张</button></div>
+    <section id="closet-quick-add" class="closet-quick-add" aria-labelledby="closet-quick-kind" hidden>
+      <p class="eyebrow">从这套穿搭添加</p>
+      <h3 id="closet-quick-kind"></h3>
+      <p id="closet-quick-defaults"></p>
+      <div class="closet-form-actions"><button class="primary-button" id="closet-quick-photo" type="button">选一张照片</button><button class="quiet-button" type="button" data-close-dialog>返回穿搭</button></div>
+      <p class="closet-format-note">照片只保存在这台设备的浏览器。</p>
+    </section>
+    <input type="file" id="closet-input" accept="image/jpeg,image/png,image/webp,image/avif" multiple hidden aria-label="选择衣物照片">
     <div id="closet-library">
-      <div id="closet-intro" class="closet-intro" hidden><img src="./assets/editorial/wardrobe-scene.webp" alt="" width="1600" height="640"><div><p class="eyebrow">YOUR OWN LITTLE COLLECTION</p><h3>每一件，<br>都有新搭法。</h3><p id="closet-inventory-note"></p></div><small class="scene-credit">衣橱场景插画</small></div>
+      <p id="closet-intro" class="closet-intro" hidden><span id="closet-inventory-note"></span></p>
       <div class="closet-library-toolbar"><div class="segmented" role="group" aria-label="衣橱列表"><button id="closet-filter-active" type="button" aria-pressed="true">我的衣物</button><button id="closet-filter-removed" type="button" aria-pressed="false">最近移除 (0)</button></div><button class="primary-button" type="button" id="closet-add">＋ 添加衣物</button></div>
-      <input type="file" id="closet-input" accept="image/jpeg,image/png,image/webp,image/avif" multiple hidden aria-label="选择衣物照片">
       <div id="closet-discovery"><div class="closet-search-bar" role="search" aria-label="查找衣物"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><label class="sr-only" for="closet-search">查找衣物</label><input id="closet-search" type="search" maxlength="80" placeholder="找一件衣服，或一种颜色…"><button class="quiet-button" id="closet-search-clear" type="button" aria-label="清空搜索" hidden>×</button></div>
       <div id="closet-categories" class="closet-categories" role="group" aria-label="衣物分类"></div>
       <details class="closet-filter-panel" id="closet-filter-panel"><summary>更多筛选 <span id="closet-filter-summary">厚薄 · 合身</span></summary><div class="closet-filters">

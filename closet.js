@@ -11,11 +11,25 @@ const $=id=>document.getElementById(id);
 let records=[],photoURLs=new Map(),available=false,busy=false,queue=[],draft=null,showRemoved=false,importVersion=0;
 let restoreReview=null;
 let batch=null,libraryReturn=null,undoRemoved=null;
+let quickAdd=null;
 export const getCloset=()=>({items:records.filter(item=>!item.removedAt),available});
 export const closetPhoto=id=>photoURLs.get(id);
+export function openClosetForGarment(defaults,onClose){
+  const dialog=$('closet-dialog');
+  if(busy||!available||dialog.open)return;
+  quickAdd={defaults,onClose,savedId:null};
+  dialog.setAttribute('data-quick-add','');
+  $('closet-quick-kind').textContent=defaults.label;
+  $('closet-quick-defaults').textContent=`预填 ${closetKind(defaults.kind).label} · ${THICKNESS[defaults.thickness]}。选一张照片，再按实物确认。`;
+  $('closet-quick-photo').disabled=false;
+  $('closet-input').multiple=false;
+  clearDraft();
+  openDialog(dialog,$('closet-quick-photo'));
+}
 let channel=null;
 function message(text,error=false){$('closet-message').textContent=text;$('closet-message').hidden=!text;$('closet-message').dataset.error=String(error);$('closet-feedback').hidden=!text;}
 function returnToLibrary(){
+  if(quickAdd){$('closet-quick-photo').focus({preventScroll:true});return;}
   const target=libraryReturn?.id?$('closet-grid').querySelector(`[data-edit-clothes="${libraryReturn.id}"]`):$('closet-add');
   (target??$('closet-add')).focus({preventScroll:true});
   $('closet-dialog').scrollTop=libraryReturn?.scrollTop??0;
@@ -36,6 +50,7 @@ function syncBackupActions(){
 function setBusy(value){
   busy=value;$('closet-form').setAttribute('aria-busy',String(value));$('closet-restore-panel').setAttribute('aria-busy',String(value));
   $('closet-save').disabled=value;$('closet-add').disabled=value||!available;$('closet-cancel').disabled=value;
+  $('closet-quick-photo').disabled=value||!available;
   ['closet-search','closet-search-clear','closet-group','closet-weight-filter','closet-filter-active','closet-filter-removed','closet-clear-filters','closet-fit-only','closet-skip','closet-continue-import','closet-undo-remove'].forEach(id=>{$(id).disabled=value;});
   $('closet-categories').querySelectorAll('button').forEach(button=>{button.disabled=value;});
   syncBackupActions();
@@ -97,7 +112,8 @@ export async function preparePhoto(file){
 }
 function clearDraft(){
   if(draft?.preview)URL.revokeObjectURL(draft.preview);
-  draft=null;restoreReview=null;$('closet-form').hidden=true;$('closet-restore-panel').hidden=true;$('closet-library').hidden=false;
+  draft=null;restoreReview=null;$('closet-form').hidden=true;$('closet-restore-panel').hidden=true;
+  $('closet-library').hidden=!!quickAdd;$('closet-quick-add').hidden=!quickAdd;
   $('closet-input').value='';$('closet-backup-input').value='';$('closet-dialog').scrollTop=0;
 }
 async function verifyBackupPhoto(photo){
@@ -127,15 +143,15 @@ function edit(item,isNew=false){
   clearDraft();draft={...item,isNew,preview:URL.createObjectURL(item.photo)};
   $('closet-editor-photo').src=draft.preview;
   $('closet-editor-title').textContent=isNew?'把这件衣物放进衣橱':'编辑这件衣物';
-  $('closet-import-progress').textContent=isNew?`第 ${batch.total-queue.length} / ${batch.total} 张 · ${batchSummary()}`:'修改后，穿搭推荐会同步更新';
-  $('closet-import-meter').hidden=!isNew;$('closet-import-meter').max=batch?.total??1;$('closet-import-meter').value=batch?batch.saved+batch.skipped:0;
-  $('closet-skip').hidden=!isNew;$('closet-cancel').textContent=isNew?'结束添加':'返回衣橱';
+  $('closet-import-progress').textContent=quickAdd?`来自穿搭建议 · ${quickAdd.defaults.label}`:isNew?`第 ${batch.total-queue.length} / ${batch.total} 张 · ${batchSummary()}`:'修改后，穿搭推荐会同步更新';
+  $('closet-import-meter').hidden=!isNew||!!quickAdd;$('closet-import-meter').max=batch?.total??1;$('closet-import-meter').value=batch?batch.saved+batch.skipped:0;
+  $('closet-skip').hidden=!isNew||!!quickAdd;$('closet-cancel').textContent=quickAdd?'返回穿搭':isNew?'结束添加':'返回衣橱';
   $('closet-name').value=item.name;$('closet-kind').value=item.kind??'';$('closet-thickness').value=item.thickness??'regular';
   const sizing=normalizeSizing(item.sizing);$('closet-size-label').value=sizing.label;$('closet-wear-fit').value=sizing.fit;
   for(const key of Object.keys(BODY_FIELDS))for(const bound of ['min','max'])$(`closet-range-${key}-${bound}`).value=sizing.ranges[key]?.[bound]??'';
   $('closet-sizing-panel').open=false;$('closet-ranges-panel').open=false;syncSizingFields();
-  $('closet-save').textContent=isNew&&queue.length?'保存并继续':'保存到衣橱';
-  $('closet-library').hidden=true;$('closet-form').hidden=false;$('closet-dialog').scrollTop=0;$('closet-editor-title').tabIndex=-1;$('closet-editor-title').focus({preventScroll:true});
+  $('closet-save').textContent=quickAdd?'保存并返回穿搭':isNew&&queue.length?'保存并继续':'保存到衣橱';
+  $('closet-quick-add').hidden=true;$('closet-library').hidden=true;$('closet-form').hidden=false;$('closet-dialog').scrollTop=0;$('closet-editor-title').tabIndex=-1;$('closet-editor-title').focus({preventScroll:true});
 }
 async function nextPhoto(){
   $('closet-continue-import').hidden=true;
@@ -144,8 +160,9 @@ async function nextPhoto(){
   try{
     const photo=await preparePhoto(file);
     if(version!==importVersion||!$('closet-dialog').open)return;
-    edit({id:crypto.randomUUID(),name:file.name.replace(/\.[^.]+$/,'').slice(0,40),photo},true);
-    message('请确认衣物类型和厚薄，再保存。照片不会上传服务器。');
+    const {kind,thickness}=quickAdd?.defaults??{};
+    edit({id:crypto.randomUUID(),name:file.name.replace(/\.[^.]+$/,'').slice(0,40),photo,kind,thickness},true);
+    message(quickAdd?'类型和厚薄已预填，请按照片里的实物确认。':'请确认衣物类型和厚薄，再保存。照片不会上传服务器。');
   }catch(error){if(version===importVersion){
     batch.skipped++;clearDraft();message(`${file.name}：${errorMessage(error)} ${batchSummary()}${queue.length?`还有 ${queue.length} 张未处理，可继续下一张。`:''}`,true);
     $('closet-continue-import').hidden=!queue.length;
@@ -177,15 +194,28 @@ export function setupCloset(){
     $('closet-filter-panel').open=filters().thickness!=='all'||filters().hideUnfit;
     openDialog($('closet-dialog'),$('closet-add'));refresh();
   }));
-  $('closet-dialog').addEventListener('close',()=>{importVersion++;queue=[];batch=null;undoRemoved=null;$('closet-undo-remove').hidden=true;$('closet-continue-import').hidden=true;clearDraft();setBusy(false);message('');});
+  $('closet-dialog').addEventListener('close',event=>{
+    const completed=quickAdd;
+    event.currentTarget.removeAttribute('data-quick-add');
+    quickAdd=null;$('closet-input').multiple=true;
+    importVersion++;queue=[];batch=null;undoRemoved=null;
+    $('closet-undo-remove').hidden=true;$('closet-continue-import').hidden=true;
+    clearDraft();setBusy(false);message('');
+    completed?.onClose(completed.savedId);
+  });
   $('closet-add').addEventListener('click',()=>{if(!busy&&available){libraryReturn={scrollTop:$('closet-dialog').scrollTop};$('closet-input').click();}});
+  $('closet-quick-photo').addEventListener('click',()=>{if(quickAdd&&!busy&&available)$('closet-input').click();});
   $('closet-input').addEventListener('change',()=>{
     const files=[...$('closet-input').files];if(!files.length)return;
+    if(quickAdd&&files.length!==1){message('请选一张照片。',true);$('closet-input').value='';return;}
     if(files.length>12){message('一次最多导入 12 张照片，请分批添加。',true);$('closet-input').value='';return;}
     importVersion++;queue=files;batch={total:files.length,saved:0,skipped:0};undoRemoved=null;$('closet-undo-remove').hidden=true;nextPhoto();
   });
   $('closet-kind').addEventListener('change',()=>{const kind=closetKind($('closet-kind').value);if(kind)$('closet-thickness').value=kind.thickness;syncSizingFields();});
-  $('closet-cancel').addEventListener('click',()=>{importVersion++;queue=[];clearDraft();message(batch?`${batchSummary()}其余未保存的照片已取消。`:'已返回衣橱，未保存的修改未应用。');batch=null;returnToLibrary();});
+  $('closet-cancel').addEventListener('click',()=>{
+    if(quickAdd){$('closet-dialog').close();return;}
+    importVersion++;queue=[];clearDraft();message(batch?`${batchSummary()}其余未保存的照片已取消。`:'已返回衣橱，未保存的修改未应用。');batch=null;returnToLibrary();
+  });
   $('closet-skip').addEventListener('click',()=>{if(busy||!draft?.isNew)return;batch.skipped++;nextPhoto();});
   $('closet-continue-import').addEventListener('click',()=>{if(!busy&&queue.length)nextPhoto();});
   $('closet-form').addEventListener('submit',async event=>{
@@ -193,6 +223,7 @@ export function setupCloset(){
     try{
       const isNew=draft.isNew,savedItem=await saveCloset({...draft,name:$('closet-name').value.trim(),kind:$('closet-kind').value,thickness:$('closet-thickness').value,sizing:readSizing()});
       await refresh({throwOnError:true});channel?.postMessage('changed');if(version!==importVersion)return;
+      if(quickAdd){quickAdd.savedId=savedItem.id;$('closet-dialog').close();return;}
       if(isNew)batch.saved++;
       clearDraft();if(isNew){showRemoved=false;clearFilters();renderLibrary();}
       message(!isNew&&!filterCloset([savedItem],filters()).length?'已保存；这件衣物不符合当前筛选，可清除筛选查看。':'已保存到本机，天气页的搭配已更新。');
