@@ -2,8 +2,8 @@ import { getBodyProfile } from './body-profile.js?v=20261028-studio1';
 import { sizingSummary, fitAssessment } from './shared/fit.js?v=20261028-studio1';
 import { finite, temp, escapeHTML as esc } from './shared/weather.js';
 import { outfitPeriods } from './shared/outfit-periods.js';
-import { clothes, wardrobe } from './visuals.js?v=20261028-studio1';
-import { getCloset, closetPhoto, openClosetForGarment } from './closet.js?v=20261104-quick-add';
+import { clothes, wardrobe } from './visuals.js?v=20261105-flatlay';
+import { getCloset, closetPhoto, openClosetForGarment } from './closet.js?v=20261105-flatlay';
 import { matchCloset, clothingMatchReason, closetKind, THICKNESS, garmentImportDefaults } from './shared/closet.js?v=20261104-quick-add';
 
 import { openDialog } from './dialogs.js?v=20261028-studio1';
@@ -87,7 +87,8 @@ function updateOutfit(message='') {
   $('closet-variation').title=garments.alternatives?'从合适的同类衣物里换一组':'再添加合适的同类衣物，就能换一套';
   $('outfit-coverage').hidden=!personal||!period.available;
   $('outfit-coverage').innerHTML=`<div><strong>${garments.ownedCount}<span> / ${garments.wear.length}</span></strong><p>件来自我的衣橱</p></div><ul>${garments.wear.map(item=>`<li data-matched="${!!item.owned}"><i aria-hidden="true">${item.owned?'✓':'＋'}</i><span>${esc(item.role)}<small>${item.owned?'已匹配':'建议参考'}</small></span></li>`).join('')}</ul>`;
-  $('outfit-items').innerHTML=garments.wear.length?garments.wear.map((item,i)=>`<article class="outfit-item" data-personal="${!!item.owned}" data-outfit-slot="${item.slot}" tabindex="-1"><div class="garment-stage" data-garment="${item.asset}" data-owned="${!!item.owned}"><span class="garment-role"><small>${String(i+1).padStart(2,'0')}</small> ${item.role}</span><img src="${item.owned?closetPhoto(item.owned.id):clothes[item.asset]}" alt="${esc(item.owned?.name??`${item.label}插画`)}" width="200" height="190"></div><strong>${item.owned?esc(item.owned.name):garmentLabel(item.label)}</strong><span class="garment-reason">${item.owned?esc(item.label):item.reason}</span>${personal?`<small class="closet-source" data-owned="${!!item.owned}">${item.owned?'我的衣橱':'建议单品 · 衣橱暂缺'}</small>`:''}${item.owned?`<small class="fit-badge" data-fit="${item.fit.label==='尺码待确认'?'unknown':'eligible'}">${esc(item.fit.label)}</small>`:''}${pickButton(item,period.available)}${quickAddButton(item,period.available&&closet.available)}</article>`).join(''):'<p class="empty-note">体感数据暂缺，暂不推荐衣物。可以更新天气，或稍后再试。</p>';
+  $('outfit-items').innerHTML=garments.wear.length?garments.wear.map(item=>`<article class="outfit-item" data-personal="${!!item.owned}" data-outfit-slot="${item.slot}" tabindex="-1"><span class="garment-role">${item.role}</span><div class="garment-stage" data-garment="${item.asset}" data-owned="${!!item.owned}"><img src="${item.owned?closetPhoto(item.owned.id):clothes[item.asset]}" alt="${esc(item.owned?.name??`${item.label}款式示意`)}" width="200" height="190"></div><strong>${item.owned?esc(item.owned.name):garmentLabel(item.label)}</strong><span class="garment-reason">${item.owned?esc(item.label):item.reason}</span>${personal?`<small class="closet-source" data-owned="${!!item.owned}">${item.owned?'我的衣橱':'建议单品 · 衣橱暂缺'}</small>`:''}${item.owned?`<small class="fit-badge" data-fit="${item.fit.label==='尺码待确认'?'unknown':'eligible'}">${esc(item.fit.label)}</small>`:''}${pickButton(item,period.available)}${quickAddButton(item,period.available&&closet.available)}</article>`).join(''):'<p class="empty-note">体感数据暂缺，暂不推荐衣物。可以更新天气，或稍后再试。</p>';
+  $('outfit-illustration-note').hidden=!garments.wear.some(item=>!item.owned);
   const ownedWear=garments.wear.filter(item=>item.owned),compared=ownedWear.filter(item=>item.fit.matched.length).length;
   $('outfit-fit-note').textContent=profileError||(!period.available?'':profile?(compared?`已有 ${compared} 件对照你的身体范围；其余依据试穿标记或天气推荐。`:'档案已应用；当前单品暂无可对照的身体范围，可在衣橱编辑中补充。'):'补充穿衣档案与衣物尺码，推荐会更贴近你的实际穿着。');
   $('outfit-fit-note').hidden=!$('outfit-fit-note').textContent;
@@ -165,7 +166,7 @@ export function setupOutfit() {
 
 function quickAddButton(item,available){
   if(!available||item.owned||!garmentImportDefaults(item))return '';
-  return `<button type="button" class="garment-pick garment-add" data-add-slot="${item.slot}" aria-haspopup="dialog" aria-label="添加${esc(item.label)}到衣橱"><span aria-hidden="true">＋</span> 添加这类衣物</button>`;
+  return `<button type="button" class="garment-pick garment-add" data-add-slot="${item.slot}" aria-haspopup="dialog" aria-label="添加${esc(item.label)}到衣橱"><span aria-hidden="true">＋</span> 加入衣橱</button>`;
 }
 
 function startQuickAdd(slot){

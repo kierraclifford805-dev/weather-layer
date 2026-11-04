@@ -2,8 +2,8 @@ import { finite, temp, escapeHTML as esc, describeWeather, summarize, outfit, da
 import { localDate, addDays } from './shared/dates.js';
 import { modules } from './shared/briefing.js?v=20261028-studio1';
 import { temperatureAlert } from './shared/temperature-alert.js';
-import { scenes, weatherScene, outfitHeadlines } from './visuals.js?v=20261028-studio1';
-import { renderOutfit } from './outfit-view.js?v=20261104-quiet-edit';
+import { scenes, weatherScene, outfitHeadlines } from './visuals.js?v=20261105-flatlay';
+import { renderOutfit } from './outfit-view.js?v=20261105-flatlay';
 const $ = id => document.getElementById(id);
 export function formatDate(date, options = {}) {
   return new Intl.DateTimeFormat('zh-CN', { month:'long', day:'numeric', weekday:'long', timeZone:'UTC', ...options }).format(new Date(`${date}T12:00:00Z`));
