@@ -48,6 +48,15 @@ function compatible(garment,item) {
   if (['tshirt','shorts'].includes(item.kind)) return item.thickness!=='warm';
   return true;
 }
+
+export function garmentImportDefaults(garment) {
+  const kind=closetKind(garment.asset);
+  if(!kind)return null;
+  const thickness=[kind.thickness,...Object.keys(THICKNESS)]
+    .find(value=>compatible(garment,{kind:kind.id,thickness:value}));
+  return thickness?{kind:kind.id,thickness,label:garment.label}:null;
+}
+
 function hash(value) {let n=2166136261;for(const char of value)n=Math.imul(n^char.charCodeAt(0),16777619);return n>>>0;}
 
 export const garmentSlot = (section,garment) => `${section}:${garment.asset}`;
