@@ -1,8 +1,10 @@
-# 添一件 · 每日穿衣天气
+# 天气与衣橱助手 · 每日穿搭建议
 
 一个无需前端构建的静态天气工具。保留 GitHub Pages；可选的「明日出门提醒」使用独立 Cloudflare Workers + D1 + 每分钟 Cron + Web Push。
 
-[打开添一件](https://kierraclifford805-dev.github.io/weather-layer/)。前端使用 GitHub Pages，明日提醒服务需要独立配置与部署。
+[打开天气与衣橱助手](https://kierraclifford805-dev.github.io/weather-layer/)。前端使用 GitHub Pages，明日提醒服务需要独立配置与部署。
+
+原名「添一件」。更名只更新品牌展示，保留原有网址、本机衣橱、偏好和备份格式。
 
 ## 日常天气
 
