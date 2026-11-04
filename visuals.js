@@ -12,7 +12,12 @@ export function weatherScene(code, night = false) {
   if ([0,1,2].includes(code)) return 'clear';
   return code === 3 ? 'cloudy' : 'unknown';
 }
-export const clothes = Object.fromEntries(['tshirt','longsleeve','knit','light-jacket','jacket','coat','puffer','base-layer','trousers','shorts','hat','umbrella','sunscreen','water'].map(id => [id, new URL(`clothes/studio/${id}.svg`, assets).href]));
+// Generated cutouts illustrate garment categories, never a user's actual possessions.
+const flatlayGarments = ['tshirt','longsleeve','knit','light-jacket','jacket','coat','puffer','base-layer','trousers','shorts'];
+export const clothes = Object.fromEntries([
+  ...flatlayGarments.map(id => [id, new URL(`clothes/flatlay/${id}.webp`, assets).href]),
+  ...['hat','umbrella','sunscreen','water'].map(id => [id, new URL(`clothes/studio/${id}.svg`, assets).href])
+]);
 export const wardrobeScene=new URL('editorial/wardrobe-scene.webp',assets).href;
 const categoryPaths={
   all:'M12 8V6a2 2 0 1 1 2-2M12 8 3 15v3h18v-3L12 8Z',

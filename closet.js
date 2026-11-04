@@ -5,7 +5,7 @@ import { escapeHTML as esc } from './shared/weather.js';
 import { CLOSET_KINDS, CLOSET_GROUPS, THICKNESS, closetKind, filterCloset } from './shared/closet.js?v=20261028-studio1';
 import { listCloset, saveCloset, setClosetRemoved, deleteClosetPermanently, previewClosetRestore, restoreCloset } from './closet-store.js?v=20261028-studio1';
 import { createClosetBackup, parseClosetBackup, MAX_BACKUP_BYTES } from './shared/closet-backup.js?v=20261028-studio1';
-import { clothes, categoryIcon, wardrobeScene } from './visuals.js?v=20261028-studio1';
+import { clothes, categoryIcon, wardrobeScene } from './visuals.js?v=20261105-flatlay';
 
 const $=id=>document.getElementById(id);
 let records=[],photoURLs=new Map(),available=false,busy=false,queue=[],draft=null,showRemoved=false,importVersion=0;

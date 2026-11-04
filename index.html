@@ -10,12 +10,12 @@
   <link rel="stylesheet" href="./styles.css?v=20261028-studio1">
   <link rel="stylesheet" href="./reminders.css?v=20261028-studio1">
   <link rel="stylesheet" href="./closet.css?v=20261104-quick-add">
-  <link rel="stylesheet" href="./editorial.css?v=20261104-quiet-edit">
+  <link rel="stylesheet" href="./editorial.css?v=20261105-flatlay">
   <script src="./theme.js?v=20261028-studio1"></script>
   <title>天气与衣橱助手 · 每日穿搭建议</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23244ddd'/%3E%3Cpath d='M32 15v34M15 32h34' stroke='%23ffda66' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E">
 
-  <script type="module" src="./app.js?v=20261104-quiet-edit"></script>
+  <script type="module" src="./app.js?v=20261105-flatlay"></script>
   <script type="module" src="./reminders.js?v=20261028-studio1"></script>
 </head>
 <body>
@@ -56,7 +56,11 @@
         <section class="wardrobe-panel surface" aria-labelledby="wardrobe-title">
           <div class="section-heading wardrobe-masthead">
             <div><p class="eyebrow wardrobe-meta">衣橱手记 <span aria-hidden="true">/</span> <span id="wardrobe-date"></span></p><h2 id="wardrobe-title">今日穿搭推荐</h2></div>
-            <button type="button" class="closet-open" data-open-closet aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM12 4v16M9 11v2m6-2v2M7 20v2m10-2v2"/></svg><span id="closet-open-label">我的衣橱</span></button>
+            <button type="button" class="closet-open" data-open-closet aria-haspopup="dialog">
+              <span class="closet-open-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM12 4v16M9 11v2m6-2v2M7 20v2m10-2v2"/></svg></span>
+              <span id="closet-open-label">我的衣橱</span>
+              <svg class="closet-open-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
           </div>
           <div class="outfit-periods" id="outfit-periods" role="group" aria-label="穿搭参考时段" aria-describedby="outfit-period-note">
             <button type="button" data-outfit-period="all" aria-pressed="true"><span>全天</span><small>07–21 时</small></button>
@@ -65,7 +69,7 @@
             <button type="button" data-outfit-period="evening" aria-pressed="false"><span>晚间</span><small>18–21 时</small></button>
           </div>
           <div class="outfit-subheading"><h3>穿在身上</h3><button type="button" id="closet-variation" class="quiet-button" hidden>换一套 ↻</button></div>
-          <div class="outfit-items" id="outfit-items"></div><p id="closet-summary" class="closet-summary">用自己的衣服，搭一身。</p><p class="outfit-import-status" id="outfit-import-status" role="status"></p>
+          <div class="outfit-items" id="outfit-items"></div><p id="outfit-illustration-note" class="outfit-illustration-note" hidden>示意图仅参考款式，颜色不参与推荐。</p><p id="closet-summary" class="closet-summary">用自己的衣服，搭一身。</p><p class="outfit-import-status" id="outfit-import-status" role="status"></p>
           <div class="outfit-save-panel" id="outfit-save-panel" hidden><div class="outfit-save-actions"><button type="button" class="primary-button" id="outfit-save">就穿这套 · 记住</button><button type="button" class="quiet-button" id="outfit-undo" hidden>撤销换搭</button><button type="button" class="quiet-button" id="outfit-revert" hidden>恢复自动推荐</button><button type="button" class="quiet-button" id="outfit-forget" hidden>取消记住</button></div><p id="outfit-save-status" role="status"></p><details class="outfit-save-privacy"><summary>本机保存说明</summary><p>切换日期或时段时，最近 12 组临时调整会留在当前页面，刷新后不保留。点击“记住”才写入本机，按城市、当地日期和时段分别保存衣物编号，不复制照片，最多保留最近 30 组。清除网站数据后会丢失；不云同步，不包含在衣橱备份和明日推送中。天气建议或衣橱变化后需要重新确认。</p></details></div>
           <details class="outfit-explanation" id="outfit-explanation">
             <summary>这套怎么选的？</summary>
