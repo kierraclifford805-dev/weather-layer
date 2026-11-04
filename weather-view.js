@@ -3,7 +3,7 @@ import { localDate, addDays } from './shared/dates.js';
 import { modules } from './shared/briefing.js?v=20261028-studio1';
 import { temperatureAlert } from './shared/temperature-alert.js';
 import { scenes, weatherScene, outfitHeadlines } from './visuals.js?v=20261028-studio1';
-import { renderOutfit } from './outfit-view.js?v=20261028-studio1';
+import { renderOutfit } from './outfit-view.js?v=20261104-quiet-edit';
 const $ = id => document.getElementById(id);
 export function formatDate(date, options = {}) {
   return new Intl.DateTimeFormat('zh-CN', { month:'long', day:'numeric', weekday:'long', timeZone:'UTC', ...options }).format(new Date(`${date}T12:00:00Z`));
@@ -53,9 +53,9 @@ export function renderWeather(weather, city, view, fetchedAt, sensitivity='norma
   const rangeAlert = temperatureAlert(r);
   $('temperature-alert').hidden = !rangeAlert;
   $('temperature-alert-title').textContent = rangeAlert?.title ?? '';
-  $('temperature-alert-text').textContent = rangeAlert?.text ?? '';
+  $('temperature-alert-text').textContent = rangeAlert ? '出门时按时段增减衣物。' : '';
   $('temperature-alert-detail').textContent = rangeAlert?.detail ? `${rangeAlert.detail}（预报）` : '';
-  $('temperature-alert-detail').hidden = !rangeAlert?.detail;
+  $('temperature-alert-extra').hidden = !rangeAlert?.detail;
   const fetched=new Intl.DateTimeFormat('zh-CN',{timeZone:weather.timezone,hour:'2-digit',minute:'2-digit',hour12:false}).format(fetchedAt);
   $('updated-at').textContent=`${isCurrent ? `${weather.current.time.slice(11,16)} 实况` : `${date} 预报`} · ${weather.timezone}`;
   renderOutfit(r,sun,day,date,sensitivity,`${city.latitude},${city.longitude}@${weather.timezone}`,city.name);

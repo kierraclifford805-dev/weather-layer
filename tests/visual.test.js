@@ -510,6 +510,38 @@ test('immediate removal undo restores the actual garment and owned recommendatio
 });
 function stagePhotos(w,$,files){Object.defineProperty($('closet-input'),'files',{configurable:true,value:files});$('closet-input').dispatchEvent(new w.Event('change'));}
 const testPhoto=name=>Object.assign(new Blob(['test image'],{type:'image/png'}),{name});
+test('quick add prefills warm trousers and returns to the matched outfit without remembering it',async t=>{
+  const data=fixture();data.hourly.apparent_temperature=data.hourly.time.map(()=>0);
+  const {w,$}=await page(t,{closetDB:new IDBFactory(),photoCanvas:true,fetchWeather:()=>Response.json(data)});
+  const slot='wear:trousers';
+  const card=()=>$('outfit-items').querySelector(`[data-outfit-slot="${slot}"]`);
+  card().querySelector('[data-add-slot]').click();
+  assert($('closet-dialog').open);assert($('closet-library').hidden);assert(!$('closet-input').multiple);
+  assert.match($('closet-quick-defaults').textContent,/长裤 · 保暖/);
+  stagePhotos(w,$,[testPhoto('常穿的厚长裤.png')]);await flush();
+  assert.equal($('closet-kind').value,'trousers');assert.equal($('closet-thickness').value,'warm');
+  submit(w,$('closet-form'));await flush();
+  assert(!$('closet-dialog').open);assert($('closet-input').multiple);
+  assert.equal(card().dataset.personal,'true');assert.match(card().textContent,/常穿的厚长裤/);
+  assert.equal(w.document.activeElement,card());assert.match($('outfit-import-status').textContent,/用于当前推荐/);
+  assert.equal(w.localStorage.getItem(OUTFIT_STORAGE_KEY),null);
+});
+
+test('quick add can retry a bad photo and keeps an edited, incompatible garment out of the recommendation',async t=>{
+  const {w,$}=await page(t,{closetDB:new IDBFactory(),photoCanvas:true});
+  const trigger=()=>$('outfit-items').querySelector('[data-add-slot="wear:light-jacket"]');
+  trigger().click();
+  stagePhotos(w,$,[{name:'不支持.heic',type:'image/heic',size:100}]);await flush();
+  assert.match($('closet-message').textContent,/HEIC/);assert(!$('closet-quick-add').hidden);
+  stagePhotos(w,$,[testPhoto('取消这件.png')]);await flush();
+  $('closet-cancel').click();assert(!$('closet-dialog').open);assert.match($('closet-count').textContent,/0 件/);
+  trigger().click();stagePhotos(w,$,[testPhoto('厚外套.png')]);await flush();
+  $('closet-kind').value='coat';$('closet-kind').dispatchEvent(new w.Event('change'));
+  submit(w,$('closet-form'));await flush();
+  assert(!$('closet-dialog').open);assert(trigger());assert.match($('outfit-import-status').textContent,/当前推荐未选用/);
+  assert.match($('closet-grid').textContent,/厚外套/);
+});
+
 test('batch import exposes progress, skips a photo and saves remaining photos with explicit classification',async t=>{
   const {w,$}=await page(t,{closetDB:await closetFixture(),photoCanvas:true});w.document.querySelector('.closet-open').click();await flush();
   stagePhotos(w,$,[testPhoto('第一张.png'),testPhoto('第二张.png')]);await flush();

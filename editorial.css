@@ -1,108 +1,338 @@
-/* The daily edit: one visual layer, driven by the existing theme variables. */
-body {background:radial-gradient(ellipse at 8% 0,#dfe8f438,transparent 42rem),radial-gradient(ellipse at 100% 30%,#efe4c32b,transparent 42rem),var(--page)}
-.brand strong {letter-spacing:.04em;overflow-wrap:anywhere}
-.brand {max-width:100%;min-width:0;flex-shrink:1}
-.brand > span:last-child {min-width:0}
-.brand-mark {flex:none}
-@media(max-width:600px) {
-  .topbar {flex-wrap:wrap}
-  .brand strong {font-size:1.05rem}
-  .header-actions {min-width:120px}
+/* The editorial layer keeps weather, photographs and type in a shared palette. */
+:root {
+  --page:#f7f7f3;
+  --surface-soft:#eeefeb;
+  --ink:#232d30;
+  --muted:#536165;
+  --faint:#5c696d;
+  --brand:#345563;
+  --brand-hover:#274551;
+  --blue-soft:#e7eeef;
+  --line:#d9dfda;
+  --paper:#f0f0eb;
+  --paper-line:var(--line);
+  --studio-ink:#394e52;
+  --shadow:none;
+  --radius:18px;
+  --weather-paper:#e7eef0;
+  --weather-ink:#253c42;
+  --weather-muted:#4c646b;
+  --weather-rule:#bfced0;
 }
-.brand-mark {box-shadow:inset 0 1px 0 #ffffff35,0 5px 14px #29477715}
-.weather-window {isolation:isolate;background:linear-gradient(125deg,#eaf1f9 20%,#dce8f1 95%)}
-.weather-window::before {content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(115deg,transparent 53%,#ffffff55 53.2%,#ffffff08 69%,transparent 69.2%),radial-gradient(ellipse at 75% 20%,#ffffff80,transparent 65%);pointer-events:none}
-.weather-window::after {content:"";position:absolute;width:37%;aspect-ratio:1;right:-6%;top:-14%;border:1px solid #ffffff60;border-radius:50%;box-shadow:0 0 0 24px #ffffff12,0 0 0 48px #ffffff0a;z-index:-1;pointer-events:none}
-.weather-window h1 {font-family:var(--serif);font-weight:650;letter-spacing:.035em}
-.scene-picture {filter:drop-shadow(0 12px 15px #48638316)}
-.weather-reading {padding:12px 0 8px}
-.advice-badge {border:1px solid #ffffff70;background:#ffffff70;letter-spacing:.06em}
-.sun-panel {background:radial-gradient(circle at 94% 0,#f5dfa83b,transparent 52%),var(--surface);align-self:start}
-.sun-mark {width:44px;height:44px;padding:8px;background:var(--paper);border-radius:50%;color:#a58444}
+:root[data-theme=dark] {
+  --page:#161c20;
+  --surface:#20282d;
+  --surface-soft:#29343a;
+  --ink:#ecf1ef;
+  --muted:#b9c6c7;
+  --faint:#aab9bb;
+  --brand:#345563;
+  --blue:#b1d5df;
+  --blue-soft:#2b4048;
+  --line:#3c4a50;
+  --paper:#242e33;
+  --paper-line:var(--line);
+  --studio-ink:#d1e1e2;
+  --weather-paper:#26383e;
+  --weather-ink:#eff6f5;
+  --weather-muted:#bed0d2;
+  --weather-rule:#4e6569;
+}
+.topbar,main,footer {
+  max-width:1200px;
+  padding-inline:clamp(16px,4vw,44px);
+}
+.topbar {
+  padding-block:16px;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px 20px;
+}
+.brand {min-width:0;flex:0 1 auto;gap:10px}
+.brand>span:last-child {min-width:0}
+.brand strong {font-size:1.125rem;letter-spacing:.02em;overflow-wrap:anywhere}
+.brand-mark {
+  flex:none;
+  width:34px;
+  height:34px;
+  border-radius:9px;
+  color:#f2eddf;
+  font-size:1.5rem;
+  box-shadow:none;
+}
+.header-actions {max-width:100%;gap:6px}
+.city-button {background:transparent;border-radius:9px;min-height:44px}
+.view-toolbar {
+  margin:0 0 16px;
+  padding-top:8px;
+  border-top:1px solid var(--line);
+}
+.date-switch {background:none;padding:0}
+.date-switch button {border-radius:8px;min-height:44px}
+.date-switch button[aria-pressed=true] {background:var(--blue-soft);box-shadow:none}
+.theme-switch button {border-radius:8px}
+.today-layout {
+  display:grid;
+  grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);
+  grid-template-areas:"hero hero" "wardrobe sidebar";
+  gap:clamp(18px,2.6vw,36px) clamp(20px,3.6vw,52px);
+  align-items:start;
+}
+
+:root .weather-window {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(5.25rem,26%);
+  gap:0 clamp(12px,3vw,36px);
+  padding:clamp(16px,2.6vw,30px);
+  border-radius:18px;
+  background:var(--weather-paper);
+  color:var(--weather-ink);
+}
+:root[data-theme=dark] .weather-window:not([data-scene=night]) {
+  background:var(--weather-paper);
+  color:var(--weather-ink);
+}
+:root .weather-window[data-scene=night] {
+  --weather-paper:#263445;
+  --weather-ink:#f3f6fc;
+  --weather-muted:#c2cdd9;
+  --weather-rule:#516075;
+}
+.hero-copy {grid-column:1;grid-row:1;max-width:none;align-self:end}
+.hero-meta {display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin-bottom:8px}
+:root .weather-window :is(.eyebrow,.hero-reason,.hero-foot p,.weather-support p,.daily-range>span) {color:var(--weather-muted)}
+.weather-window .eyebrow {font-size:.75rem;letter-spacing:.03em;overflow-wrap:anywhere}
+:root .weather-window .advice-badge {
+  margin:0;
+  padding:2px 0;
+  border-radius:0;
+  border-bottom:1px solid var(--weather-rule);
+  background:transparent;
+  color:var(--weather-muted);
+  font-size:.75rem;
+}
+.weather-window h1 {
+  max-width:none;
+  font-family:var(--serif);
+  font-size:clamp(1.6rem,4.25vw,3.3rem);
+  font-weight:650;
+  line-height:1.23;
+  letter-spacing:.025em;
+  overflow-wrap:anywhere;
+}
+.weather-window :is(.hero-prefix,.hero-conclusion) {display:inline}
+.hero-reason {max-width:34em;margin-top:10px;font-size:.9375rem}
+.weather-observation {display:contents}
+.scene-picture {
+  position:static;
+  grid-column:2;
+  grid-row:1 / span 2;
+  place-self:center;
+  width:min(100%,188px);
+  max-height:205px;
+  object-fit:contain;
+}
+.weather-reading {grid-column:1;grid-row:2;max-width:none;margin-top:18px}
+.temperature {font-size:clamp(2.15rem,4vw,3rem)}
+.daily-range {margin-left:clamp(8px,4vw,44px);text-align:left}
+.weather-window .temperature-alert {
+  grid-column:1 / -1;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:0 14px;
+  margin-top:16px;
+  padding:5px 12px;
+  border-radius:6px;
+  border-width:2px;
+}
+.weather-window .temperature-alert h3 {font-size:.875rem}
+.weather-window .temperature-alert p {margin:0;font-size:.8125rem}
+#temperature-alert-extra {margin-left:auto;max-width:100%;font-size:.75rem}
+#temperature-alert-extra summary {min-height:44px;padding-block:10px;align-content:center;cursor:pointer}
+.weather-window .temperature-alert .temperature-alert-detail {font-size:.75rem;padding-bottom:5px}
+:root .weather-window .hero-foot {
+  grid-column:1 / -1;
+  margin-top:12px;
+  padding-top:3px;
+  border-color:var(--weather-rule);
+}
+.hero-foot p {font-size:.6875rem}
+.hero-foot .quiet-button {min-height:44px}
+
+.wardrobe-panel {padding:0;background:transparent;border-radius:0}
+.wardrobe-masthead {align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.wardrobe-masthead>div {min-width:0}
+.wardrobe-masthead h2 {
+  font-family:var(--serif);
+  font-size:clamp(1.45rem,3vw,2.25rem);
+  line-height:1.3;
+  letter-spacing:.025em;
+}
+.wardrobe-masthead .wardrobe-meta {color:var(--muted);font-size:.6875rem;letter-spacing:.07em;margin-bottom:7px}
+.wardrobe-meta>span[aria-hidden] {margin-inline:5px}
+#wardrobe-date {font-variant-numeric:tabular-nums}
+.closet-summary {margin-top:10px;font-size:.8125rem;color:var(--muted);line-height:1.7}
+.closet-open {
+  flex-direction:row;
+  min-height:44px;
+  gap:8px;
+  padding:8px 12px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--surface);
+  color:var(--blue);
+  font-size:.8125rem;
+}
+.closet-open svg {width:18px;height:18px}
+.outfit-periods {
+  margin-top:16px;
+  padding:0;
+  border-radius:0;
+  background:transparent;
+  border-bottom:1px solid var(--line);
+}
+.outfit-periods button {border-radius:0;min-height:51px;border-bottom:2px solid transparent}
+.outfit-periods button[aria-pressed=true] {border-color:var(--blue);background:transparent;box-shadow:none;font-weight:650}
+.outfit-periods button:not(:disabled):hover {background:var(--blue-soft)}
+.outfit-periods button small {margin-top:1px}
+.outfit-subheading {margin-top:14px;margin-bottom:9px;align-items:center;min-height:44px}
+.outfit-subheading h3,.carry-heading h3 {font-weight:600;letter-spacing:.04em}
+.outfit-items {
+  max-width:none;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,8rem),1fr));
+  gap:14px;
+  margin-top:0;
+}
+.wardrobe-panel .outfit-item {
+  text-align:left;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
+}
+.wardrobe-panel .outfit-item:focus-visible {outline:2px solid var(--blue);outline-offset:4px;border-radius:8px}
+.wardrobe-panel .outfit-item .garment-stage {
+  width:100%;
+  padding:10px;
+  background:var(--paper);
+  border-radius:9px;
+  box-shadow:none;
+}
+.garment-role {font-size:.6875rem;letter-spacing:.045em;padding:0}
+.garment-role small {font-size:inherit}
+.wardrobe-panel .outfit-item .garment-stage img {
+  aspect-ratio:1;
+  max-width:178px;
+  height:auto;
+  border-radius:5px;
+  margin:5px 0 0;
+  transform:none;
+}
+.outfit-item>strong {font-size:.9375rem;margin-top:8px;font-weight:600;line-height:1.5}
+.outfit-item>.garment-reason {line-height:1.6}
+.outfit-item .fit-badge {
+  background:transparent;
+  border:0;
+  border-radius:0;
+  padding:0;
+  margin:0;
+  color:var(--muted);
+}
+.outfit-item .closet-source {margin-top:2px}
+.garment-pick {border:0;border-radius:6px;padding:5px 2px;min-height:44px;font-size:.75rem;background:transparent}
+.garment-pick:hover {text-decoration:underline}
+.garment-pick.garment-add {gap:4px}
+.outfit-coverage {
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px 20px;
+  align-items:center;
+  justify-content:space-between;
+  margin-block:10px;
+  padding:12px;
+  border-radius:8px;
+  background:var(--surface-soft);
+}
+.outfit-coverage>div,.outfit-coverage li {display:flex;align-items:center;gap:8px}
+.outfit-coverage strong {font-size:1rem}
+.outfit-coverage strong>span,.outfit-coverage p {font-size:.75rem;color:var(--muted)}
+.outfit-coverage ul {display:flex;flex-wrap:wrap;gap:8px 14px;margin:0;padding:0;list-style:none}
+.outfit-coverage li,.outfit-coverage li small {font-size:.75rem}
+.outfit-coverage li i {font-style:normal;color:var(--blue)}
+.outfit-coverage li small {display:block;color:var(--muted)}
+.fit-coverage-note {background:transparent;border-radius:0;padding:0;font-size:.8125rem}
+.outfit-save-panel {margin-top:18px;padding-top:12px}
+.outfit-explanation {margin-top:14px;border-block:1px solid var(--line);padding:0}
+.outfit-explanation summary {min-height:44px;align-content:center}
+.outfit-explanation :is(.outfit-basis,.outfit-period-note) {margin:5px 0;padding:0;border:0}
+.outfit-explanation[open] {padding-bottom:14px}
+.outfit-explanation #closet-explainer {margin-top:8px}
+.carry-heading {margin-top:24px}
+.carry-items {gap:12px}
+.carry-item {padding:8px 10px;background:var(--paper);border-radius:8px;align-items:flex-start;flex:1 1 150px}
+.carry-item img {background:none;width:44px;height:48px;flex:none}
+.carry-item strong {overflow-wrap:anywhere}
+.profile-entry {margin-top:24px;padding:14px 0}
+
+.weather-sidebar {grid-area:sidebar;display:grid;gap:20px;min-width:0}
+.weather-sidebar>:is(.sun-panel,.tonight-card) {grid-area:auto}
+.sun-panel {
+  width:100%;
+  padding:8px 0 16px;
+  background:transparent;
+  border-block:1px solid var(--line);
+  border-radius:0;
+}
+.sun-panel .section-heading {margin-bottom:8px}
+.sun-panel h2,.tonight-card h2 {font-size:1.125rem;line-height:1.4}
+.sun-mark {width:23px;height:23px;color:#937335;background:none}
+:root[data-theme=dark] .sun-mark {color:var(--warm)}
 .uv-reading>strong {font-family:var(--serif);letter-spacing:-.04em}
-.tonight-card {position:relative;isolation:isolate;align-self:start;overflow:hidden;box-shadow:inset 0 1px 0 #ffffff16}
-.tonight-card::after {content:"";position:absolute;z-index:-1;width:180px;height:205px;right:-10px;bottom:-50px;opacity:.13;background:url('./assets/weather/night.svg') center/contain no-repeat;pointer-events:none}
-.tonight-card h2 {font-family:var(--serif);font-weight:500;letter-spacing:.04em}
-.tonight-top>svg {width:34px;height:34px}
-.tonight-button {background:#ffffff0a}
-.wardrobe-panel {position:relative;border:1px solid var(--paper-line);background:linear-gradient(155deg,var(--surface) 72%,var(--paper));box-shadow:0 8px 36px #29374f05}
-.wardrobe-masthead {align-items:flex-start;margin-bottom:8px}
-.wardrobe-masthead h2 {font-size:clamp(1.45rem,2vw,1.8rem);letter-spacing:.02em}
-.wardrobe-masthead .eyebrow {color:var(--studio-ink);letter-spacing:.12em;margin-bottom:8px}
-.wardrobe-masthead .eyebrow>span {color:#b3a28a;margin-inline:5px}
-#wardrobe-date {flex:none;max-width:9em;padding:7px 11px;border:1px solid var(--paper-line);border-radius:9px;background:var(--paper);font-variant-numeric:tabular-nums}
-.wardrobe-deck {font-family:var(--serif);font-size:.9375rem;color:var(--muted);line-height:1.9;margin-bottom:18px;letter-spacing:.05em}
-.closet-callout {position:relative;background:var(--studio-blue);border-radius:14px;padding:10px 15px;margin-top:0;border-left:3px solid var(--blue)}
-.closet-callout strong {font-size:.9375rem;color:var(--studio-ink)}
-.closet-callout p {font-size:.75rem;max-width:30em}
-.closet-open {min-width:68px;min-height:52px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:7px}
-.closet-open:hover {box-shadow:0 3px 10px #2034490a;transform:translateY(-2px)}
-.outfit-periods {margin-top:22px;background:var(--paper);border:1px solid var(--paper-line);border-radius:13px;padding:4px;gap:4px}
-.outfit-periods button {border-radius:9px;min-height:60px}
-.outfit-periods button[aria-pressed=true] {box-shadow:0 2px 7px #26334a0c}
-.outfit-subheading h3,.carry-heading h3 {display:flex;align-items:center;gap:10px;font-weight:550;letter-spacing:.03em}
-.outfit-subheading h3>small,.carry-heading h3>small {display:inline-grid;place-items:center;width:25px;height:25px;border:1px solid var(--paper-line);border-radius:50%;color:var(--muted);font-size:.625rem;letter-spacing:0;font-weight:400;flex:none}
-.outfit-subheading {margin-top:16px}
-.outfit-period-note {margin-bottom:14px}
-.outfit-coverage {display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;justify-content:space-between;margin-top:12px;padding:15px 17px;border-block:1px solid var(--paper-line);background:var(--paper);border-radius:12px}
-.outfit-coverage>div {display:flex;align-items:center;gap:10px;flex:none}
-.outfit-coverage strong {font-family:var(--serif);font-weight:500;font-size:1.8rem;line-height:1}
-.outfit-coverage strong>span {font-family:var(--font);font-size:.875rem;color:var(--muted)}
-.outfit-coverage p {font-size:.6875rem;line-height:1.8;color:var(--muted);max-width:5em}
-.outfit-coverage ul {display:flex;flex-wrap:wrap;gap:10px 18px;list-style:none;margin:0;padding:0}
-.outfit-coverage li {display:flex;gap:7px;align-items:center;font-size:.75rem;line-height:1.6}
-.outfit-coverage li i {font-style:normal;display:grid;place-items:center;width:20px;height:20px;border:1px dashed var(--line);border-radius:50%;background:var(--surface);color:var(--muted)}
-.outfit-coverage li[data-matched=true] i {background:var(--studio-sage);color:var(--studio-ink);border-style:solid}
-.outfit-coverage li small {display:block;font-size:.625rem;color:var(--muted)}
-.outfit-items {gap:18px;margin-top:22px;padding:18px 14px;background:linear-gradient(var(--paper),var(--surface));border:1px solid var(--paper-line);border-radius:20px}
-.garment-stage {position:relative;padding:10px;background:var(--studio-blue);border-radius:12px;box-shadow:inset 0 1px 0 #ffffff50}
-.outfit-item:nth-child(2) .garment-stage {background:var(--garment-warm)}
-.outfit-item:nth-child(3) .garment-stage {background:var(--studio-sage)}
-.garment-stage::after {content:"";position:absolute;inset:7px;border:1px solid #ffffff45;border-radius:8px;pointer-events:none}
-.garment-role {position:relative;z-index:1;letter-spacing:.08em;padding:3px 4px 0}
-.outfit-item img {max-width:190px;margin-top:8px;filter:drop-shadow(0 6px 6px #24354d08)}
-.outfit-item[data-personal=true] .garment-stage {padding:12px}
-.outfit-item[data-personal=true] .garment-stage img {filter:none}
-.outfit-item>strong {font-size:.9375rem;margin-top:13px;font-weight:550}
-.garment-pick {border-radius:8px;font-size:.75rem;background:transparent;min-height:42px}
-.fit-badge {border-radius:6px}
-.fit-coverage-note {background:transparent;border-left:2px solid var(--paper-line);border-radius:0;padding:3px 12px;font-size:.75rem}
-.carry-heading {border-top:1px solid var(--paper-line);padding-top:24px}
-.carry-items {gap:10px}
-.carry-item {padding:12px 10px;background:var(--paper);border:1px solid var(--paper-line);border-radius:12px;align-items:flex-start;flex:1 1 150px}
-.carry-item img {background:transparent;width:52px;height:58px;flex:none}
-.carry-item strong {font-size:.8125rem}
-.profile-entry {margin-top:24px;padding:16px 0 10px}
-.outfit-save-panel {border:1px solid var(--paper-line);padding:18px;border-radius:14px;background:var(--surface);margin-top:20px}
-.outfit-save-privacy summary {min-height:36px;padding-block:8px}
-.outfit-basis {border-top:0;margin-top:12px;font-size:.6875rem}
-.outfit-explanation {border-bottom:1px solid var(--paper-line);padding-bottom:10px}
-#closet-dialog {width:min(880px,calc(100% - 32px));background:linear-gradient(155deg,var(--surface) 75%,var(--paper));border:1px solid var(--paper-line);container-type:inline-size}
+.sun-panel .sun-advice {font-size:.875rem}
+.tonight-card {
+  padding:20px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:10px;
+  color:var(--ink);
+}
+.tonight-card::after {content:none}
+.tonight-top {align-items:center}
+.tonight-top svg {width:19px;height:19px;fill:var(--blue)}
+.tonight-card h2 {margin:0}
+.tonight-card #reminder-card-summary {margin-top:8px;color:var(--muted);font-size:.875rem;line-height:1.7}
+.tonight-card .tonight-state {color:var(--muted);margin:10px 0}
+.tonight-card .tonight-button {
+  width:auto;
+  align-self:flex-start;
+  padding:4px 0;
+  border:0;
+  background:transparent;
+  color:var(--blue);
+}
+.tonight-card .tonight-button:hover {text-decoration:underline}
+.details-layout {margin-top:32px}
+.details-layout .surface {border:1px solid var(--line);border-radius:12px}
+
+#closet-dialog {width:min(880px,calc(100% - 32px));background:var(--surface);border:1px solid var(--paper-line);container-type:inline-size}
 #closet-dialog .dialog-heading {align-items:flex-start}
 #closet-title {font-size:1.65rem;letter-spacing:.04em}
 #closet-dialog .dialog-heading .eyebrow {font-size:.5625rem;letter-spacing:.16em;color:var(--muted)}
-.closet-intro {position:relative;isolation:isolate;background:#f4f0e7;border-radius:16px;overflow:hidden;margin-bottom:22px;min-height:160px;padding:23px 24px}
-.closet-intro>img {position:absolute;z-index:-1;inset:0;width:100%;height:100%;object-fit:contain;object-position:right center;mask-image:linear-gradient(90deg,transparent 45%,#000 70%);pointer-events:none}
-.closet-intro>div {max-width:48%;color:#344358}
-.closet-intro h3 {font-family:var(--serif);font-size:1.6rem;line-height:1.7;font-weight:550;letter-spacing:.05em;margin:5px 0}
-.closet-intro .eyebrow {color:#5b6b7b;font-size:.5625rem}
-.closet-intro p:not(.eyebrow) {font-size:.6875rem;line-height:1.8}
 .scene-credit {position:absolute;right:10px;bottom:7px;font-size:.5625rem;color:#45576a;background:#ffffffb3;border:1px solid #ffffff80;border-radius:5px;padding:2px 6px;line-height:1.6}
 .closet-library-toolbar {gap:10px;padding-bottom:4px}
-.closet-library-toolbar>.primary-button {border-radius:10px;box-shadow:0 4px 10px #4263eb12}
+.closet-library-toolbar>.primary-button {border-radius:10px;box-shadow:none}
 .closet-search-bar {border:1px solid var(--line);background:var(--surface);border-radius:10px}
 .closet-search-bar:focus-within {outline:2px solid var(--blue);outline-offset:2px}
 .closet-search-bar input:focus-visible {outline:none}
 .closet-categories {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,3.4rem),1fr));gap:8px;margin:16px 0}
-.closet-categories button {position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:11px 5px;background:var(--paper);border:1px solid transparent;border-radius:12px;min-height:88px;text-align:center}
-.closet-categories button[aria-pressed=true] {border-color:var(--blue);background:var(--blue-soft);box-shadow:inset 0 0 0 2px var(--surface)}
-.closet-categories svg {width:27px;height:27px;fill:none;stroke:var(--studio-ink);stroke-width:1.15;stroke-linejoin:round;stroke-linecap:round;margin-bottom:2px}
+.closet-categories button {position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:11px 5px;background:var(--paper);border:1px solid transparent;border-radius:8px;min-height:64px;text-align:center}
+.closet-categories button[aria-pressed=true] {border-color:var(--blue);background:var(--blue-soft);box-shadow:none}
+.closet-categories svg {width:22px;height:22px;fill:none;stroke:var(--studio-ink);stroke-width:1.15;stroke-linejoin:round;stroke-linecap:round;margin-bottom:2px}
 .closet-categories b {font-size:.75rem;font-weight:500;line-height:1.5;overflow-wrap:anywhere}
 .closet-categories button>span {font-size:.625rem;line-height:1.3;color:var(--muted)}
 .closet-filter-panel {border-color:var(--paper-line);margin-top:10px}
 .closet-photo {background:var(--paper);border:1px solid var(--paper-line);border-radius:14px;padding:15px}
-.closet-item:nth-child(3n+2) .closet-photo {background:var(--studio-blue)}
-.closet-item:nth-child(3n) .closet-photo {background:var(--studio-sage)}
 .closet-photo>span {box-shadow:0 2px 8px #22395409;border:1px solid var(--line);width:32px;height:32px}
 .closet-item h3 {font-size:.9375rem;font-weight:550;letter-spacing:.01em}
 .closet-item-copy {padding:3px 2px}
@@ -126,65 +356,77 @@ body {background:radial-gradient(ellipse at 8% 0,#dfe8f438,transparent 42rem),ra
 .closet-editor-actions {background:var(--surface)}
 .outfit-option {border-radius:14px;padding:12px;background:var(--paper);border-color:var(--paper-line)}
 .outfit-option img {border-radius:9px;background:var(--surface);border:1px solid var(--line);padding:7px}
-:root[data-theme=dark] .weather-window::before {opacity:.1}
-:root[data-theme=dark] .weather-window::after {opacity:.1}
-:root[data-theme=dark] .sun-panel {background:radial-gradient(circle at 94% 0,#f5dfa80d,transparent 52%),var(--surface)}
-:root[data-theme=dark] .closet-intro>img,:root[data-theme=dark] .closet-empty-art>img {opacity:.87}
-:root[data-theme=dark] .closet-intro,:root[data-theme=dark] .closet-empty-art {background:#d9d6cc}
-@media(min-width:1100px){
-  #dashboard {display:grid;grid-template-columns:minmax(0,1.62fr) minmax(0,1fr);grid-template-rows:auto min-content min-content 1fr;grid-template-areas:'hero sun' 'wardrobe tonight' 'wardrobe hourly' 'wardrobe forecast';gap:24px;align-items:start}
-  #dashboard>.today-layout,#dashboard>.details-layout {display:contents}
-  .hourly-panel {grid-area:hourly}
-  .forecast-panel {grid-area:forecast}
-  #dashboard>.method-note {grid-column:1/-1;margin-top:0}
-  .wardrobe-panel {padding:30px}
-  .outfit-items {padding:22px 18px}
-  .closet-empty[data-first=true] .closet-empty-art {min-height:260px}
+
+.closet-intro {font-size:.8125rem;color:var(--muted);padding:0 0 10px}
+:root[data-theme=dark] .closet-empty-art>img {opacity:.87}
+:root[data-theme=dark] .closet-empty-art {background:#d9d6cc}
+@media(min-width:900px) {
+  :root .weather-window {grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);padding-bottom:14px}
+  .hero-copy {align-self:center}
+  .weather-observation {
+    grid-column:2;
+    grid-row:1;
+    display:grid;
+    grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);
+    align-items:center;
+    gap:12px;
+  }
+  .scene-picture {grid-area:auto;width:100%;max-width:158px}
+  .weather-reading {grid-area:auto;margin:0;gap:4px 10px}
+  .daily-range {width:100%;margin:3px 0 0}
 }
-@media(max-width:600px){
-  .wardrobe-panel {padding:22px 18px}
-  .wardrobe-masthead h2 {font-size:1.35rem}
-  .wardrobe-masthead .eyebrow {font-size:.5625rem;letter-spacing:.1em}
-  #wardrobe-date {font-size:.6875rem;padding:6px 8px;max-width:7.5em}
-  .wardrobe-deck {font-size:.8125rem;margin-bottom:16px}
-  .closet-callout {padding:12px;gap:8px}
-  .closet-callout>div {flex-basis:9rem}
-  .closet-callout strong {font-size:.8125rem}
-  .closet-open {min-width:58px;padding:8px;font-size:.6875rem;min-height:58px}
-  .closet-open svg {width:23px;height:23px}
-  .outfit-items {padding:14px 11px;gap:20px 10px}
-  .wardrobe-panel .outfit-items {grid-template-columns:repeat(auto-fit,minmax(min(100%,7rem),1fr))}
-  .garment-stage {padding:8px;border-radius:10px}
-  .garment-stage::after {inset:5px}
-  .outfit-item strong {font-size:.875rem}
-  .outfit-item .garment-role {font-size:.625rem}
-  .outfit-item[data-personal=true] .garment-stage {padding:8px}
-  .outfit-coverage {padding:12px;gap:12px}
-  .outfit-coverage>div {gap:8px}
-  .outfit-coverage ul {gap:8px 12px}
-  .outfit-coverage li {font-size:.6875rem;gap:5px}
-  .outfit-coverage li i {width:17px;height:17px}
-  .outfit-save-panel {padding:14px}
-  .outfit-items>.outfit-item:nth-child(3):last-child {background:var(--studio-sage);border:1px solid var(--paper-line);border-radius:12px;padding:12px;column-gap:12px}
-  .outfit-items>.outfit-item:nth-child(3):last-child .garment-stage {box-shadow:none}
-  .outfit-items>.outfit-item:nth-child(3):last-child .garment-stage::after {display:none}
-  .carry-item {flex-basis:125px;gap:7px;padding:10px 8px}
-  .carry-item img {width:41px;height:47px}
-  .carry-item strong {font-size:.75rem}
-  .carry-item small {font-size:.6875rem;line-height:1.8}
-  .profile-entry {margin-top:20px}
+@media(max-width:800px) {
+  .today-layout {
+    grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"hero" "wardrobe" "sidebar";
+  }
+  .weather-sidebar {grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+}
+@media(max-width:600px) {
+  .topbar {padding-block:12px}
+  .brand strong {font-size:1rem}
+  .city-button {padding:6px 8px;gap:5px;font-size:.8125rem}
+  .reminder-shortcut {width:36px}
+  .view-toolbar {margin-bottom:12px}
+  :root .weather-window {grid-template-columns:minmax(0,1fr) minmax(0,27%);column-gap:6px;border-radius:13px;padding-bottom:8px}
+  .hero-copy {grid-column:1 / -1}
+  .hero-meta {gap:2px 10px;margin-bottom:8px}
+  .weather-window .eyebrow,:root .weather-window .advice-badge {font-size:.6875rem}
+  .weather-window h1 {font-size:clamp(1.42rem,6.4vw,2rem)}
+  .hero-reason {font-size:.8125rem;margin-top:8px}
+  .weather-reading {grid-column:1;margin-top:12px;gap:4px 8px}
+  .scene-picture {grid-row:2;width:100%;max-height:64px;align-self:center}
+  .daily-range {margin-left:auto;text-align:right}
+  .weather-window .temperature-alert {margin-top:12px;padding:8px 10px 0}
+  .weather-window .temperature-alert:has(#temperature-alert-extra[hidden]) {padding-bottom:8px}
+  #temperature-alert-extra {width:100%;margin-left:0}
+  :root .weather-window .hero-foot {margin-top:8px;padding-top:0}
+  .wardrobe-masthead {gap:7px 10px}
+  .wardrobe-masthead h2 {font-size:1.43rem}
+  .outfit-periods {margin-top:10px}
+  .outfit-subheading {margin-top:9px;margin-bottom:6px}
+  .wardrobe-panel .outfit-items {
+    grid-template-columns:repeat(auto-fit,minmax(min(100%,6.45rem),1fr));
+    gap:14px 8px;
+  }
+  .wardrobe-panel .outfit-items>.outfit-item:nth-child(3):last-child {
+    grid-column:auto;
+    display:flex;
+    padding:0;
+    background:transparent;
+    border:0;
+  }
+  .wardrobe-panel .outfit-item .garment-stage {padding:7px}
+  .outfit-item>strong {font-size:.875rem}
+  .garment-pick {font-size:.75rem}
+  .carry-item {flex-basis:130px}
+  .weather-sidebar {grid-template-columns:minmax(0,1fr)}
   #closet-dialog {width:100%;border:0}
   #closet-title {font-size:1.5rem}
-  .closet-intro {min-height:155px;padding:18px;margin-bottom:18px}
-  .closet-intro>img {object-position:65% center}
-  .closet-intro>div {max-width:49%}
-  .closet-intro h3 {font-size:1.25rem;line-height:1.75}
-  .closet-intro .eyebrow {font-size:.5rem;letter-spacing:.08em}
-  .closet-intro p:not(.eyebrow) {font-size:.625rem}
   .closet-categories {gap:6px}
-  .closet-categories button {padding:10px 3px;border-radius:10px;min-height:86px}
+  .closet-categories button {padding:10px 3px;border-radius:10px;min-height:64px}
   .closet-categories b {font-size:.6875rem}
-  .closet-categories svg {width:25px;height:25px}
+  .closet-categories svg {width:21px;height:21px}
   .closet-photo {padding:12px;border-radius:12px}
   .closet-item h3 {font-size:.875rem}
   .closet-item p {font-size:.6875rem}
@@ -198,13 +440,10 @@ body {background:radial-gradient(ellipse at 8% 0,#dfe8f438,transparent 42rem),ra
   .closet-starter {gap:9px 13px;margin-top:16px}
   .closet-starter>span {font-size:.6875rem}
 }
-@media(prefers-reduced-motion:reduce){
-  .closet-open:hover {transform:none}
-}
 /* Text enlargement changes the available em space: give the copy its own row. */
 @container (max-width:18em){
-  .closet-intro,.closet-empty-art {display:flex;flex-direction:column;align-items:stretch;padding:0}
-  .closet-intro>div,.closet-empty-art>div {order:1;max-width:none;padding:20px;background:#f3efe6}
-  .closet-intro>img,.closet-empty-art>img {position:static;order:2;width:100%;height:160px;object-fit:cover;object-position:right;mask-image:none;z-index:0}
-  .closet-intro .scene-credit,.closet-empty-art .scene-credit {z-index:1}
+  .closet-empty-art {display:flex;flex-direction:column;align-items:stretch;padding:0}
+  .closet-empty-art>div {order:1;max-width:none;padding:20px;background:#f3efe6}
+  .closet-empty-art>img {position:static;order:2;width:100%;height:160px;object-fit:cover;object-position:right;mask-image:none;z-index:0}
+  .closet-empty-art .scene-credit {z-index:1}
 }

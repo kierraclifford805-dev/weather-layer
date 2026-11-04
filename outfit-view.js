@@ -3,8 +3,8 @@ import { sizingSummary, fitAssessment } from './shared/fit.js?v=20261028-studio1
 import { finite, temp, escapeHTML as esc } from './shared/weather.js';
 import { outfitPeriods } from './shared/outfit-periods.js';
 import { clothes, wardrobe } from './visuals.js?v=20261028-studio1';
-import { getCloset, closetPhoto } from './closet.js?v=20261028-studio1';
-import { matchCloset, clothingMatchReason, closetKind, THICKNESS } from './shared/closet.js?v=20261028-studio1';
+import { getCloset, closetPhoto, openClosetForGarment } from './closet.js?v=20261104-quick-add';
+import { matchCloset, clothingMatchReason, closetKind, THICKNESS, garmentImportDefaults } from './shared/closet.js?v=20261104-quick-add';
 
 import { openDialog } from './dialogs.js?v=20261028-studio1';
 import { OUTFIT_STORAGE_KEY, selectionKey, outfitSignature, chosenItems, sameChoices, validateSavedSelection, readSavedOutfits, saveOutfit, forgetOutfit } from './shared/outfit-selection.js?v=20261028-studio1';
@@ -54,6 +54,7 @@ function updateOutfit(message='') {
   $('advice-description').textContent=selected==='all'||!period.available?period.advice.description:periodDescriptions[period.advice.label];
   const closet=getCloset(),personal=closet.items.length>0,{profile,error:profileError}=getBodyProfile();
   const scope={cityKey:context.cityKey,date,period:selected},key=selectionKey(scope);
+  $('outfit-import-status').textContent='';
   const requirements=wardrobe({...report,advice:period.advice},sun),signature=outfitSignature(requirements,context.sensitivity,profile?.revision);
   const existing=drafts.get(key);
   if(existing&&existing.signature!==signature&&existing.dirty)message='天气或体感建议已变化，未保存的调整已重新匹配，请确认当前搭配。';
@@ -81,12 +82,12 @@ function updateOutfit(message='') {
   $('closet-explainer').textContent=personal?(period.available?(garments.missingCount?`另有 ${garments.missingCount} 件为建议单品，暂时没有同时符合天气与合身条件的自有衣物。`:'按天气、衣物类型和合身资料搭配，未知尺码仍需确认。'):'天气恢复后，再从衣橱挑选合适的搭配。'):'导入照片、确认分类，按天气从你的衣橱挑选。';
   if(personal&&period.available&&!garments.alternatives)$('closet-explainer').textContent+=' 添加合适的同类衣物后可换一套。';
   $('closet-open-label').textContent=personal?`衣橱 · ${closet.items.length}`:'我的衣橱';
-  $('closet-variation').hidden=!personal||!period.available;
+  $('closet-variation').hidden=!personal||!period.available||!garments.alternatives;
   $('closet-variation').disabled=!garments.alternatives;
   $('closet-variation').title=garments.alternatives?'从合适的同类衣物里换一组':'再添加合适的同类衣物，就能换一套';
   $('outfit-coverage').hidden=!personal||!period.available;
   $('outfit-coverage').innerHTML=`<div><strong>${garments.ownedCount}<span> / ${garments.wear.length}</span></strong><p>件来自我的衣橱</p></div><ul>${garments.wear.map(item=>`<li data-matched="${!!item.owned}"><i aria-hidden="true">${item.owned?'✓':'＋'}</i><span>${esc(item.role)}<small>${item.owned?'已匹配':'建议参考'}</small></span></li>`).join('')}</ul>`;
-  $('outfit-items').innerHTML=garments.wear.length?garments.wear.map((item,i)=>`<article class="outfit-item" data-personal="${!!item.owned}"><div class="garment-stage" data-garment="${item.asset}" data-owned="${!!item.owned}"><span class="garment-role"><small>${String(i+1).padStart(2,'0')}</small> ${item.role}</span><img src="${item.owned?closetPhoto(item.owned.id):clothes[item.asset]}" alt="${esc(item.owned?.name??`${item.label}插画`)}" width="200" height="190"></div><strong>${item.owned?esc(item.owned.name):garmentLabel(item.label)}</strong><span class="garment-reason">${item.owned?esc(item.label):item.reason}</span>${personal?`<small class="closet-source" data-owned="${!!item.owned}">${item.owned?'我的衣橱':'建议单品 · 衣橱暂缺'}</small>`:''}${item.owned?`<small class="fit-badge" data-fit="${item.fit.label==='尺码待确认'?'unknown':'eligible'}">${esc(item.fit.label)}</small>`:''}${pickButton(item,period.available)}</article>`).join(''):'<p class="empty-note">体感数据暂缺，暂不推荐衣物。可以更新天气，或稍后再试。</p>';
+  $('outfit-items').innerHTML=garments.wear.length?garments.wear.map((item,i)=>`<article class="outfit-item" data-personal="${!!item.owned}" data-outfit-slot="${item.slot}" tabindex="-1"><div class="garment-stage" data-garment="${item.asset}" data-owned="${!!item.owned}"><span class="garment-role"><small>${String(i+1).padStart(2,'0')}</small> ${item.role}</span><img src="${item.owned?closetPhoto(item.owned.id):clothes[item.asset]}" alt="${esc(item.owned?.name??`${item.label}插画`)}" width="200" height="190"></div><strong>${item.owned?esc(item.owned.name):garmentLabel(item.label)}</strong><span class="garment-reason">${item.owned?esc(item.label):item.reason}</span>${personal?`<small class="closet-source" data-owned="${!!item.owned}">${item.owned?'我的衣橱':'建议单品 · 衣橱暂缺'}</small>`:''}${item.owned?`<small class="fit-badge" data-fit="${item.fit.label==='尺码待确认'?'unknown':'eligible'}">${esc(item.fit.label)}</small>`:''}${pickButton(item,period.available)}${quickAddButton(item,period.available&&closet.available)}</article>`).join(''):'<p class="empty-note">体感数据暂缺，暂不推荐衣物。可以更新天气，或稍后再试。</p>';
   const ownedWear=garments.wear.filter(item=>item.owned),compared=ownedWear.filter(item=>item.fit.matched.length).length;
   $('outfit-fit-note').textContent=profileError||(!period.available?'':profile?(compared?`已有 ${compared} 件对照你的身体范围；其余依据试穿标记或天气推荐。`:'档案已应用；当前单品暂无可对照的身体范围，可在衣橱编辑中补充。'):'补充穿衣档案与衣物尺码，推荐会更贴近你的实际穿着。');
   $('outfit-fit-note').hidden=!$('outfit-fit-note').textContent;
@@ -114,6 +115,10 @@ export function setupOutfit() {
       const index=item.candidates.findIndex(candidate=>candidate.id===item.owned?.id);
       return [item.slot,item.candidates.length?item.candidates[(index+1)%item.candidates.length].id:null];
     })));updateOutfit();
+  });
+  $('outfit-items').addEventListener('click',event=>{
+    const button=event.target.closest('[data-add-slot]');
+    if(button&&current)startQuickAdd(button.dataset.addSlot);
   });
   for(const id of ['outfit-items','carry-items'])$(id).addEventListener('click',event=>{
     const button=event.target.closest('[data-pick-slot]');if(!button||!current)return;
@@ -156,6 +161,26 @@ export function setupOutfit() {
   window.addEventListener('storage',event=>{if(context&&(event.key===OUTFIT_STORAGE_KEY||event.key===null))updateOutfit('另一页面更新了搭配记录，已重新核对本页。');});
   document.addEventListener('body-profile-updated',()=>{if(context)updateOutfit();});
   document.addEventListener('closet-updated',()=>{if(context)updateOutfit();});
+}
+
+function quickAddButton(item,available){
+  if(!available||item.owned||!garmentImportDefaults(item))return '';
+  return `<button type="button" class="garment-pick garment-add" data-add-slot="${item.slot}" aria-haspopup="dialog" aria-label="添加${esc(item.label)}到衣橱"><span aria-hidden="true">＋</span> 添加这类衣物</button>`;
+}
+
+function startQuickAdd(slot){
+  const item=current.garments.wear.find(garment=>garment.slot===slot);
+  if(!item||item.owned||!current.period.available)return;
+  const defaults=garmentImportDefaults(item),key=selection.key;
+  if(!defaults)return;
+  openClosetForGarment(defaults,savedId=>{
+    const card=selection.key===key?$('outfit-items').querySelector(`[data-outfit-slot="${slot}"]`):null;
+    if(savedId){
+      const picked=selection.key===key&&current.garments.wear.find(garment=>garment.slot===slot)?.owned?.id===savedId;
+      $('outfit-import-status').textContent=picked?'衣物已存到衣橱，并用于当前推荐。点击“记住”可保存这套搭配。':'衣物已存到衣橱。当前推荐未选用这件，仍会按天气和合身条件匹配。';
+    }
+    (card?.querySelector('[data-add-slot]')??card??$('outfit-periods').querySelector('[aria-pressed="true"]'))?.focus({preventScroll:true});
+  });
 }
 
 function pickButton(item,available) {
