@@ -46,8 +46,8 @@ export async function createClosetBackup(items,now=new Date()) {
 }
 export function parseClosetBackup(text) {
   if(typeof text!=='string'||text.length>MAX_BACKUP_BYTES)throw new Error('备份文件不能超过 64 MB。');
-  let backup;try{backup=JSON.parse(text);}catch{throw new Error('无法读取备份，请选择「添一件」导出的 JSON 文件。');}
-  if(backup?.format!==BACKUP_FORMAT||backup.version!==1)throw new Error('这不是当前支持的「添一件」衣橱备份。');
+  let backup;try{backup=JSON.parse(text);}catch{throw new Error('无法读取备份，请选择「天气与衣橱助手」导出的 JSON 文件。');}
+  if(backup?.format!==BACKUP_FORMAT||backup.version!==1)throw new Error('这不是当前支持的「天气与衣橱助手」衣橱备份。');
   if(!Array.isArray(backup.items)||backup.items.length<1||backup.items.length>MAX_CLOSET_ITEMS)throw new Error('每份备份需要包含 1–100 件衣物。');
   const ids=new Set();
   const items=backup.items.map(item=>{

@@ -354,7 +354,7 @@ async function showDetail() {
     if (date < addDays(today, -1) || date > addDays(today, 6)) throw new Error(`${plan.city.name} · ${date} 已超出当前预报范围，无法还原当时的预报。`);
     const { data } = await fetchBriefingData(plan.city, plan.timezone, plan.modules);
     renderBrief(container, assembleBriefing(data, plan, date)); container.prepend(back);
-    document.title = `${plan.city.name} · ${date} 出门简报 · 添一件`;
+    document.title = `${plan.city.name} · ${date} 出门简报 · 天气与衣橱助手`;
   } catch (error) { container.replaceChildren(back, element('p', error.message)); }
 }
 

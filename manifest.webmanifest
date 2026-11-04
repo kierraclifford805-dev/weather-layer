@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "添一件 · 明日出门提醒",
-  "short_name": "添一件",
+  "name": "天气与衣橱助手",
+  "short_name": "天气与衣橱助手",
   "lang": "zh-CN",
   "start_url": "./",
   "scope": "./",

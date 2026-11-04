@@ -248,7 +248,7 @@ export function setupCloset(){
     try{
       const text=await createClosetBackup(items);if(version!==importVersion)return;
       const url=URL.createObjectURL(new Blob([text],{type:'application/json'})),link=document.createElement('a');
-      link.href=url;link.download=`添一件-衣橱-${new Date().toLocaleDateString('sv-SE')}.json`;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+      link.href=url;link.download=`天气与衣橱助手-衣橱-${new Date().toLocaleDateString('sv-SE')}.json`;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
       message(`已发起 ${items.length} 件衣物的备份下载，请在浏览器下载中确认保存。`);
     }catch(error){if(version===importVersion)message(errorMessage(error),true);}
     finally{if(version===importVersion)setBusy(false);}
